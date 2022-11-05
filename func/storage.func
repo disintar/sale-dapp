@@ -45,3 +45,32 @@
 
     set_data(b.end_cell());
 }
+
+
+(int, int) parse_price_config(cell price_config){
+    slice price_config_cs = price_config.begin_parse();
+    int is_ton = price_config_cs~load_uint(1);
+    int price = price_config_cs~load_grams();
+    price_config_cs.end_parse();
+
+    return (is_ton, price);
+}
+
+(int, int, int, int, slice) parse_sell_config(cell sell_config){
+    slice sell_config_cs = sell_config.begin_parse();
+
+    int marketplace_numerator = sell_config_cs~load_uint(16);
+    int marketplace_denominator = sell_config_cs~load_uint(16);
+
+    int royalty_numerator = sell_config_cs~load_uint(16);
+    int royalty_denominator = sell_config_cs~load_uint(16);
+
+    slice royalty_destanation = sell_config_cs~load_msg_addr();
+    sell_config_cs.end_parse();
+
+    return (marketplace_numerator,
+            marketplace_denominator,
+            royalty_numerator,
+            royalty_denominator,
+            royalty_destanation);
+}

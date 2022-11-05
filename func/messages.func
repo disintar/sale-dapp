@@ -41,10 +41,18 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
     ;; custom_payload:(Maybe ^Cell) forward_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
     ;; = InternalMsgBody;
 
+    int forward_amount_real = 0;
+    int mode = 1;
+    if (forward_amount == -1) {
+        mode = 128;
+    } else {
+        forward_amount_real = forward_amount;
+    }
+
     send_message(nft_address, ;; to_address
-            forward_amount, ;; forward_amount
+            forward_amount_real, ;; forward_amount
             op::nft::transfer, ;; op code
             0, ;; query id
             begin_cell().store_slice(new_owner_address), ;; payload
-            1); ;; send mode
+            mode); ;; send mode
 }

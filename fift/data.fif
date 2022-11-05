@@ -1,10 +1,12 @@
+"TonUtil.fif" include
+
 { $>smca 0= abort"Specify valid collection address" drop } : $>trySmca
 
 
 // nft address
-"EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"  $>trySmca 2constant nft_address
-"EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant deployer_address
-"EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant royalty_address
+"EQBJllkuNRjvgf1SkY7LPtZitddOesGnsboZXq7uKhC2okyE"  $>trySmca 2constant nft_address
+"kQBlxuPNk1LAWg2tktudUAJvL7jZWp0IWJDqB5lMelU-x4A3"  $>trySmca 2constant deployer_address
+"kQBlxuPNk1LAWg2tktudUAJvL7jZWp0IWJDqB5lMelU-x4A3"  $>trySmca 2constant royalty_address
 
 // 1023bits
 // 8 mode
@@ -19,10 +21,10 @@
    0 2 u,
 
    <b
-       0 16 u, // marketplace numerator
-       0 16 u, // marketplace denominator
-       0 16 u, // royalty numerator
-       0 16 u, // royalty denominator
+       5 16 u, // marketplace numerator
+       100 16 u, // marketplace denominator
+       10 16 u, // royalty numerator
+       100 16 u, // royalty denominator
        royalty_address Addr, // royalty beneficiar
    b> ref, // marketplace & royalty config
 
@@ -30,5 +32,4 @@
        1 1 u, // is price in TON?
        1000000000 Gram, // price value
    b> ref, // price & value config
-
 b>

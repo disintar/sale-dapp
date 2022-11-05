@@ -6,3 +6,4 @@ forall X -> int is_int(X x) asm "<{ TRY:<{ 0 PUSHINT ADD DROP -1 PUSHINT }>CATCH
 forall X -> int is_cell(X x) asm "<{ TRY:<{ CTOS DROP -1 PUSHINT }>CATCH<{ 2DROP 0 PUSHINT }> }>CONT 1 1 CALLXARGS";
 forall X -> int is_slice(X x) asm "<{ TRY:<{ SBITS DROP -1 PUSHINT }>CATCH<{ 2DROP 0 PUSHINT }> }>CONT 1 1 CALLXARGS";
 forall X -> int is_tuple(X x) asm "ISTUPLE";
+forall X -> tuple unsafe_to_tuple(X x) asm "NOP";

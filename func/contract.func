@@ -59,12 +59,13 @@
         ;;         ;; except nft, which we expect
         ;;         throw_unless(228, equal_slices(message_from, nft_address));
 
+        ;; ownership_assigned#05138d91 query_id:uint64 prev_owner:MsgAddress
+        ;; forward_payload:(Either Cell ^Cell) = InternalMsgBody;
+
         int op = in_msg_body~load_uint(32);
         int query_id = in_msg_body~load_uint(64);
         slice prev_owner_address = in_msg_body~load_msg_addr();
 
-        ;; ownership_assigned#05138d91 query_id:uint64 prev_owner:MsgAddress
-        ;; forward_payload:(Either Cell ^Cell) = InternalMsgBody;
 
         ;; We expect thet previus owner of nft is deployer of this contract
         int deployer_is_prev_owner = equal_slices(prev_owner_address, deployer_address);
@@ -109,12 +110,14 @@
         }
     } elseif (mode == 1) { ;; Seller is inited
         ;; Change settings & admin control
+
         if (equal_slices(message_from, deployer_address)) {
             ;; Here we can buy NFT or change settings
             int op = in_msg_body~load_uint(32);
 
             ;; Change price
             ;; TODO: add tests
+            ;; TODO: add cancel
             if (op == op::seller::change_price) {
                 cell new_price_config = in_msg_body~load_ref();
                 store_data(1,
@@ -129,8 +132,60 @@
                 throw(exit_code);
             }
         } else {
-            ;; TODO: Buy NFT
-            throw(0);
+            ;; Try to buy
+            (int is_ton, int price) = parse_price_config(price_config);
+            (int marketplace_numerator,
+                    int marketplace_denominator,
+                    int royalty_numerator,
+                    int royalty_denominator,
+                    slice royalty_destanation) = parse_sell_config(sell_config);
+            int market_fee = 0;
+            int royalty_fee = 0;
+
+            if ((marketplace_numerator > 0) & (marketplace_denominator > 0)) {
+                market_fee = min(price, muldiv(price, marketplace_numerator, marketplace_denominator));
+            }
+
+            price -= market_fee;
+
+            if ((royalty_numerator > 0) & (royalty_denominator > 0) & (price > 0)) {
+                royalty_fee = min(price, muldiv(price, royalty_numerator, royalty_denominator));
+            }
+
+            price -= royalty_fee;
+
+            if (is_ton == 1) {
+                ;; Buy with TON
+                if (msg_value - price - royalty_fee - market_fee - very_little_gas_amount <= 0) {
+                    ;; Send money back
+                    int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
+                    throw_unless(229, new_fwd_amount > 0);
+                    send_message_with_text(message_from, new_fwd_amount + fwd_fee, "No funds 🌚", 2);
+                } else {
+                    send_message_with_text(marketplace, market_fee, "Market fee, sir 🤌", 1);
+                    send_message_with_text(royalty_destanation, royalty_fee, "Hey, your royalty, sir 🤌", 1);
+
+                    tuple wow = unsafe_to_tuple(["🤭", "😱", "🥳", "👀", "🫶"]);
+                    int wow_num = rand(5);
+                    send_message_with_text(deployer_address, price, wow.at(wow_num), 1);
+
+                    raw_reserve(100000, 0); ;; save little ammount
+                    send_nft(nft_address, message_from, -1); ;; transfer nft
+
+                    store_data(2, ;; change mode to 2 (nft was bought)
+                            nft_address,
+                            deployer_address,
+                            message_from, ;; change who was bought nft
+                            sell_config,
+                            price_config);
+                }
+
+                throw(0);
+            } else {
+                ;; TODO: buy with jetton
+                throw(0);
+            }
+
         }
 
     }

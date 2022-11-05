@@ -45,11 +45,11 @@ builder generate_ownership_assigned(slice prev_owner){
             one_ton / 10, ;; my_balance
             0, ;; msg_value
             nft_ownership_message, ;; in_msg_full
-            begin_cell().end_cell().begin_parse()]; ;; in_msg_body
+            ""]; ;; in_msg_body
 
     (int gas_used_1, _) = invoke_method(recv_internal, internal_message_stack);
     (_, tuple stack) = invoke_method(get_sell_info, []);
-    ;; Init mode must be 1
+    ;; Init mode must be 0
     throw_unless(92, stack.first() == 0);
 
     ;; Nft address & owner must not be changed

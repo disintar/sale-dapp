@@ -1,3 +1,4 @@
-const little_gas_amount = 50000000; ;; 10*7 (0.05 TON)
+const very_little_gas_amount = 5000000; ;; (0.005 TON)
+const little_gas_amount = 50000000; ;; (0.05 TON)
 const one_ton = 1000000000;
 const slice marketplace = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;

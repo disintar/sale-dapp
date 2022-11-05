@@ -1,3 +1,4 @@
 #pragma version >=0.2.0;
 #include "get-methods-tests.func";
 #include "init-stage-tests.func";
+#include "sell-stage-tests.func";

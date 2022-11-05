@@ -1,0 +1,62 @@
+const slice nft_address = "EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"a;
+const slice owner_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
+
+
+_ set_fake_data() impure {
+    builder  main_data = begin_cell();
+    main_data = store_uint(main_data, 1, 8); ;; sell mode
+    main_data = store_slice(main_data, nft_address); ;; nft
+    main_data = store_slice(main_data, owner_address); ;; owner
+    main_data = store_uint(main_data, 0, 2); ;; buyer (addr none)
+
+    builder sell_config = begin_cell();
+
+    ;; Marketplace fee
+    sell_config = store_uint(sell_config, 10, 16);
+    sell_config = store_uint(sell_config, 100, 16);
+
+    ;; Royalty fee
+    sell_config = store_uint(sell_config, 5, 16);
+    sell_config = store_uint(sell_config, 100, 16);
+    sell_config = store_slice(sell_config, owner_address); ;; royalty beneficiar
+
+    cell sell_config_cell = sell_config.end_cell();
+    main_data = store_ref(main_data, sell_config_cell);
+
+    builder price_config = begin_cell();
+    price_config = store_uint(price_config, 1, 1);
+    price_config = store_grams(price_config, one_ton * 100);
+    cell price_config_cell = price_config.end_cell();
+
+    main_data = store_ref(main_data, price_config_cell);
+
+    set_data(main_data.end_cell());
+}
+
+
+int __test_try_to_buy(){
+    set_fake_data();
+
+    slice random_tolstosum = generate_any_address(1);
+
+    int fwd_fee = 10000;
+    cell tolstosum_buy_nft_message = generate_internal_message_custom(
+            0, ;; bounce
+            one_ton * 10000, ;; ton_amount - really big money here
+            0, ;; init_state
+            begin_cell(), ;; payload
+            random_tolstosum, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            one_ton * 10000, ;; msg_value
+            tolstosum_buy_nft_message, ;; in_msg_full
+            ""]; ;; in_msg_body
+
+    (int gas_used_2, _) = invoke_method(recv_internal, internal_message_stack);
+
+    ;; TODO: tests on messages
+    return 0;
+}
