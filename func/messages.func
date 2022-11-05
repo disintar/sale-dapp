@@ -1,0 +1,50 @@
+() send_message(slice to_address,
+        int amount,
+        int op,
+        int query_id,
+        builder payload,
+        int send_mode) impure inline {
+
+    var msg = begin_cell()
+            .store_uint(0x10, 6) ;; nobounce
+            .store_slice(to_address)
+            .store_coins(amount)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_uint(op, 32)
+            .store_uint(query_id, 64);
+
+    if (~ builder_null?(payload)) {
+        msg = msg.store_builder(payload);
+    }
+
+    send_raw_message(msg.end_cell(), send_mode);
+}
+
+() send_message_with_text(slice to_address,
+        int amount,
+        slice text,
+        int send_mode) impure inline {
+
+    var msg = begin_cell()
+            .store_uint(0x10, 6) ;; nobounce
+            .store_slice(to_address)
+            .store_coins(amount)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_uint(0, 32)
+            .store_slice(text);
+
+    send_raw_message(msg.end_cell(), send_mode);
+}
+
+_ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impure inline {
+    ;; transfer#5fcc3d14 query_id:uint64 new_owner:MsgAddress response_destination:MsgAddress
+    ;; custom_payload:(Maybe ^Cell) forward_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+    ;; = InternalMsgBody;
+
+    send_message(nft_address, ;; to_address
+            forward_amount, ;; forward_amount
+            op::nft::transfer, ;; op code
+            0, ;; query id
+            begin_cell().store_slice(new_owner_address), ;; payload
+            1); ;; send mode
+}

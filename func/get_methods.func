@@ -1,0 +1,12 @@
+_ get_version() method_id {
+    return 179;
+}
+
+(int, slice, slice) get_sell_info() method_id {
+    (int mode, slice nft_address, slice deployer_address) = load_data();
+
+    return (mode,
+            nft_address,
+            deployer_address ;; actually he is previus owner also
+    );
+}

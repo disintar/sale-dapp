@@ -1,0 +1,102 @@
+#pragma version >=0.2.0;
+
+#include "asm/helpers.func";
+#include "op_codes.func";
+#include "magic_constants.func";
+#include "storage.func";
+
+#include "messages.func";
+#include "get_methods.func";
+
+
+(slice, int) parse_in_msg(cell in_msg_full_cell) inline {
+    slice cs = in_msg_full_cell.begin_parse();
+    int flags = cs~load_uint(4);
+
+    slice sender_address = cs~load_msg_addr();
+
+    cs~load_msg_addr(); ;; skip dst
+    cs~load_coins(); ;; skip value
+    cs~skip_bits(1); ;; skip extracurrency collection
+    cs~load_coins(); ;; skip ihr_fee
+    int fwd_fee = cs~load_coins(); ;; we use message fwd_fee for estimation of forward_payload costs
+
+    return (sender_address, fwd_fee);
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    (slice message_from, int fwd_fee) = parse_in_msg(in_msg_full);
+
+    ;; handle internal messages
+    (int mode, slice nft_address, slice deployer_address) = load_data();
+
+    ;; uninited mode, wait for nft
+    if (mode == 0) {
+        if (equal_slices(message_from, deployer_address)) {
+            ;; Just allow deploy from deployer
+            throw(0);
+        }
+
+        ;; It's easy just to drop all messages
+        ;; But if we fucked up and got diffrent NFT / FT it'll be burned
+        ;; So I want to add transfer of NFT back, not just bounce
+        ;;         ;; here we need to drop all messages from all addresses
+        ;;         ;; except nft, which we expect
+        ;;         throw_unless(228, equal_slices(message_from, nft_address));
+
+        int op = in_msg_body~load_uint(32);
+        int query_id = in_msg_body~load_uint(64);
+        slice prev_owner_address = in_msg_body~load_msg_addr();
+
+        ;; ownership_assigned#05138d91 query_id:uint64 prev_owner:MsgAddress
+        ;; forward_payload:(Either Cell ^Cell) = InternalMsgBody;
+
+        ;; We expect thet previus owner of nft is deployer of this contract
+        int deployer_is_prev_owner = equal_slices(prev_owner_address, deployer_address);
+
+        ;; We expect NFT to be the same as in contract
+        int is_our_nft = equal_slices(message_from, nft_address);
+
+        ;; We expect op to be ownership_assigned
+        int is_ownership_assigned = op == op::nft::ownership_assigned;
+
+        if (is_our_nft & is_ownership_assigned & deployer_is_prev_owner) {
+            ;; All good, need to initialize contract
+            store_data(1, nft_address, deployer_address);
+            throw(0);
+        } elseif (op == op::nft::ownership_assigned) {
+            ;; We got not our nft
+            ;; Try to send it back
+
+            ;; First we need to validate money
+            ;; Is it enough to run previus code, pay for storage, and send message
+            int new_fwd_amount = msg_value - little_gas_amount - fwd_fee;
+            throw_unless(229, new_fwd_amount > 0);
+
+            send_nft(message_from, prev_owner_address, new_fwd_amount + fwd_fee);
+            throw(0);
+        } elseif (op == op::ft::transfer_notification) {
+            ;; We got Jettons, but current mode is not inited, so just send them back
+        } else {
+            int new_fwd_amount = msg_value - little_gas_amount - fwd_fee;
+            throw_unless(229, new_fwd_amount > 0);
+
+            ;; We got some strange stuff, try to send it back, or throw error
+            send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Error", 2);
+            throw(0);
+        }
+    } elseif (mode == 1) { ;; Seller is inited
+        ;; Here we can buy NFT or change settings
+    } elseif (mode == 2) { ;; NFT was bought
+        ;; Here we need to allow transfer nft to owner one more time
+        ;; Because it can be that thereis not enough value for gas
+    } elseif (mode == 3) { ;; Seller was canceled
+        ;; Here we need to allow transfer nft to seller deployer one more time
+        ;; Because it can be that thereis not enough value for gas
+    }
+
+}
+
+() recv_external(slice in_msg_body) impure {
+    ;; handle external messages
+}

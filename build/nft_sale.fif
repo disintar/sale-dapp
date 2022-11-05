@@ -1,0 +1,310 @@
+"Asm.fif" include
+// automatically generated from `/Users/tvorogme/Library/Application Support/toncli/func-libs/error_codes.func` `/Users/tvorogme/Library/Application Support/toncli/func-libs/math.func` `/Users/tvorogme/Library/Application Support/toncli/func-libs/stdlib.func` `/Users/tvorogme/projects/nft_ultimate_sale/func/contract.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/asm/helpers.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/op_codes.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/magic_constants.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/storage.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/messages.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/get_methods.func` 
+PROGRAM{
+  DECLPROC power
+  DECLPROC sqrt
+  DECLPROC avg
+  DECLPROC exp
+  DECLPROC log2
+  DECLPROC load_marketplace_info
+  DECLPROC load_data
+  DECLPROC store_data
+  DECLPROC send_message
+  DECLPROC send_nft
+  82320 DECLMETHOD get_version
+  117451 DECLMETHOD get_sell_info
+  DECLPROC parse_in_msg
+  DECLPROC recv_internal
+  DECLPROC recv_external
+  power PROCREF:<{
+    //  x exponent
+    OVER	//  x exponent x
+    0 EQINT	//  x exponent _3
+    IFJMP:<{	//  x exponent
+      2DROP	// 
+      0 PUSHINT	//  _4=0
+    }>	//  x exponent
+    DUP	//  x exponent exponent
+    0 EQINT	//  x exponent _6
+    IFJMP:<{	//  x exponent
+      2DROP	// 
+      1 PUSHINT	//  _7=1
+    }>	//  x exponent
+    OVER	//  x counter result
+    WHILE:<{
+      OVER	//  x counter result counter
+      1 GTINT	//  x counter result _11
+    }>DO<{	//  x counter result
+      s2 PUSH	//  x counter result x
+      MUL	//  x counter result
+      SWAP	//  x result counter
+      DEC	//  x result counter
+      SWAP	//  x counter result
+    }>	//  x counter result
+    2 1 BLKDROP2	//  result
+  }>
+  sqrt PROCREF:<{
+    //  x
+    DUP	//  x x
+    0 EQINT	//  x _2
+    IFJMP:<{	//  x
+      DROP	// 
+      0 PUSHINT	//  _3=0
+    }>	//  x
+    DUP	//  x x
+    4 LESSINT	//  x _5
+    IFJMP:<{	//  x
+      DROP	// 
+      1 PUSHINT	//  _6=1
+    }>	//  x
+    DUP	//  x x
+    INC	//  x _9
+    1 RSHIFT#	//  x z
+    OVER	//  x z y
+    WHILE:<{
+      2DUP	//  x z y z y
+      LESS	//  x z y _13
+    }>DO<{	//  x z y
+      DROP	//  x z
+      s0 s1 s0 PUSH3	//  x z y x z
+      DIV	//  x z y _14
+      ROT	//  x y _14 z
+      ADD	//  x y _15
+      1 RSHIFT#	//  x y z
+      SWAP	//  x z y
+    }>	//  x z y
+    2 1 BLKDROP2	//  y
+  }>
+  avg PROCREF:<{
+    //  x y
+    ADD	//  _2
+    1 RSHIFT#	//  _4
+  }>
+  exp PROCREF:<{
+    //  x
+    DUP	//  x x
+    -1 GTINT	//  x _2
+    IF:<{	//  x
+      POW2	//  _3
+    }>ELSE<{	//  x
+      1 PUSHINT	//  x _6=1
+      SWAP	//  _6=1 x
+      NEGATE	//  _6=1 _8
+      RSHIFT	//  _3
+    }>
+  }>
+  log2 PROCREF:<{
+    //  x
+    0 PUSHINT	//  x n=0
+    7 PUSHPOW2	//  x n=0 _3=128
+    exp INLINECALLDICT	//  x n=0 _4
+    s2 s(-1) PUXC	//  x n=0 x _4
+    GEQ	//  x n=0 _5
+    IF:<{	//  x n=0
+      DROP	//  x
+      128 RSHIFT#	//  x
+      7 PUSHPOW2	//  x n
+    }>	//  x n
+    64 PUSHINT	//  x n _10=64
+    exp INLINECALLDICT	//  x n _11
+    s2 s(-1) PUXC	//  x n x _11
+    GEQ	//  x n _12
+    IF:<{	//  x n
+      SWAP	//  n x
+      64 RSHIFT#	//  n x
+      SWAP	//  x n
+      64 ADDCONST	//  x n
+    }>	//  x n
+    32 PUSHINT	//  x n _17=32
+    exp INLINECALLDICT	//  x n _18
+    s2 s(-1) PUXC	//  x n x _18
+    GEQ	//  x n _19
+    IF:<{	//  x n
+      SWAP	//  n x
+      32 RSHIFT#	//  n x
+      SWAP	//  x n
+      32 ADDCONST	//  x n
+    }>	//  x n
+    16 PUSHINT	//  x n _24=16
+    exp INLINECALLDICT	//  x n _25
+    s2 s(-1) PUXC	//  x n x _25
+    GEQ	//  x n _26
+    IF:<{	//  x n
+      SWAP	//  n x
+      16 RSHIFT#	//  n x
+      SWAP	//  x n
+      16 ADDCONST	//  x n
+    }>	//  x n
+    8 PUSHINT	//  x n _31=8
+    exp INLINECALLDICT	//  x n _32
+    s2 s(-1) PUXC	//  x n x _32
+    GEQ	//  x n _33
+    IF:<{	//  x n
+      SWAP	//  n x
+      8 RSHIFT#	//  n x
+      SWAP	//  x n
+      8 ADDCONST	//  x n
+    }>	//  x n
+    4 PUSHINT	//  x n _38=4
+    exp INLINECALLDICT	//  x n _39
+    s2 s(-1) PUXC	//  x n x _39
+    GEQ	//  x n _40
+    IF:<{	//  x n
+      SWAP	//  n x
+      4 RSHIFT#	//  n x
+      SWAP	//  x n
+      4 ADDCONST	//  x n
+    }>	//  x n
+    2 PUSHINT	//  x n _45=2
+    exp INLINECALLDICT	//  x n _46
+    s2 s(-1) PUXC	//  x n x _46
+    GEQ	//  x n _47
+    IF:<{	//  x n
+      SWAP	//  n x
+      2 RSHIFT#	//  n x
+      SWAP	//  x n
+      2 ADDCONST	//  x n
+    }>	//  x n
+    1 PUSHINT	//  x n _52=1
+    exp INLINECALLDICT	//  x n _53
+    s1 s2 XCHG	//  n x _53
+    GEQ	//  n _54
+    IF:<{	//  n
+      INC	//  n
+    }>	//  n
+  }>
+  load_marketplace_info PROC:<{
+    //  marketplace_info
+    CTOS	//  slice_marketplace_info
+    LDMSGADDR	//  _7 _6
+    DROP	//  marketplace_address
+  }>
+  load_data PROCREF:<{
+    // 
+    c4 PUSH	//  _1
+    CTOS	//  data
+    8 LDU	//  current_mode data
+    LDMSGADDR	//  current_mode nft_address data
+    LDREF	//  current_mode nft_address _18 _17
+    DROP	//  current_mode nft_address marketplace_info
+  }>
+  store_data PROCREF:<{
+    // 
+    NEWC	//  _0
+    ENDC	//  _1
+    c4 POP
+  }>
+  send_message PROCINLINE:<{
+    //  to_address amount op query_id payload send_mode
+    0 PUSHINT	//  to_address amount op query_id payload send_mode _7=0
+    16 PUSHINT	//  to_address amount op query_id payload send_mode _7=0 _8=16
+    NEWC	//  to_address amount op query_id payload send_mode _7=0 _8=16 _9
+    6 STU	//  to_address amount op query_id payload send_mode _7=0 _11
+    s0 s7 XCHG2	//  _7=0 amount op query_id payload send_mode _11 to_address
+    STSLICER	//  _7=0 amount op query_id payload send_mode _12
+    s0 s5 XCHG2	//  _7=0 send_mode op query_id payload _12 amount
+    STVARUINT16	//  _7=0 send_mode op query_id payload _13
+    s1 s5 XCHG	//  payload send_mode op query_id _7=0 _13
+    107 STU	//  payload send_mode op query_id _27
+    s1 s2 XCHG	//  payload send_mode query_id op _27
+    32 STU	//  payload send_mode query_id _29
+    64 STU	//  payload send_mode msg
+    s2 PUSH	//  payload send_mode msg payload
+    ISNULL	//  payload send_mode msg _32
+    NOT	//  payload send_mode msg _33
+    IF:<{	//  payload send_mode msg
+      ROT	//  send_mode msg payload
+      STBR	//  send_mode msg
+      SWAP	//  msg send_mode
+    }>ELSE<{
+      s2 POP	//  msg send_mode
+    }>
+    SWAP	//  send_mode msg
+    ENDC	//  send_mode _35
+    SWAP	//  _35 send_mode
+    SENDRAWMSG
+  }>
+  send_nft PROCINLINE:<{
+    //  nft_address new_owner_address forward_amount
+    1607220500 PUSHINT	//  nft_address new_owner_address forward_amount _3=1607220500
+    0 PUSHINT	//  nft_address new_owner_address forward_amount _3=1607220500 _4=0
+    NEWC	//  nft_address new_owner_address forward_amount _3=1607220500 _4=0 _5
+    s0 s4 XCHG2	//  nft_address _4=0 forward_amount _3=1607220500 _5 new_owner_address
+    STSLICER	//  nft_address _4=0 forward_amount _3=1607220500 _6
+    s1 s3 s0 XCHG3
+    1 PUSHINT	//  nft_address forward_amount _3=1607220500 _4=0 _6 _7=1
+    send_message INLINECALLDICT
+  }>
+  get_version PROC:<{
+    // 
+    179 PUSHINT	//  _0=179
+  }>
+  get_sell_info PROC:<{
+    // 
+    load_data INLINECALLDICT	//  _4 _5 _6
+    DROP	//  mode nft_address
+  }>
+  parse_in_msg PROCINLINE:<{
+    //  in_msg_full_cell
+    CTOS	//  cs
+    4 LDU	//  _23 _22
+    NIP	//  cs
+    LDMSGADDR	//  sender_address cs
+    LDMSGADDR	//  sender_address _27 _26
+    NIP	//  sender_address cs
+    LDVARUINT16	//  sender_address _29 _28
+    NIP	//  sender_address cs
+    1 PUSHINT	//  sender_address cs _15=1
+    SDSKIPFIRST	//  sender_address cs
+    LDVARUINT16	//  sender_address _31 _30
+    NIP	//  sender_address cs
+    LDVARUINT16	//  sender_address _33 _32
+    DROP	//  sender_address fwd_fee
+  }>
+  recv_internal PROC:<{
+    //  my_balance msg_value in_msg_full in_msg_body
+    s3 POP	//  in_msg_body msg_value in_msg_full
+    parse_in_msg INLINECALLDICT	//  in_msg_body msg_value message_from fwd_fee
+    load_data INLINECALLDICT	//  in_msg_body msg_value message_from fwd_fee mode nft_address marketplace_info
+    s0 s2 XCHG	//  in_msg_body msg_value message_from fwd_fee marketplace_info nft_address mode
+    0 EQINT	//  in_msg_body msg_value message_from fwd_fee marketplace_info nft_address _12
+    IF:<{	//  in_msg_body msg_value message_from fwd_fee marketplace_info nft_address
+      s5 PUSH	//  in_msg_body msg_value message_from fwd_fee marketplace_info nft_address in_msg_body
+      SBITS	//  in_msg_body msg_value message_from fwd_fee marketplace_info nft_address slice_bits_count
+      96 LESSINT	//  in_msg_body msg_value message_from fwd_fee marketplace_info nft_address _17
+      228 THROWIFNOT
+      s0 s5 XCHG	//  nft_address msg_value message_from fwd_fee marketplace_info in_msg_body
+      32 LDU	//  nft_address msg_value message_from fwd_fee marketplace_info _50 _49
+      DROP	//  nft_address msg_value message_from fwd_fee marketplace_info op
+      s3 s5 PUXC	//  op msg_value message_from fwd_fee marketplace_info message_from nft_address
+      SDEQ	//  op msg_value message_from fwd_fee marketplace_info _27
+      s0 s5 XCHG2	//  marketplace_info msg_value message_from fwd_fee _27 op
+      AND	//  marketplace_info msg_value message_from fwd_fee _28
+      85167505 PUSHINT	//  marketplace_info msg_value message_from fwd_fee _28 _29=85167505
+      EQUAL	//  marketplace_info msg_value message_from fwd_fee _30
+      IFNOT:<{	//  marketplace_info msg_value message_from fwd_fee
+        s0 s2 XCHG
+        50000000 PUSHINT	//  marketplace_info fwd_fee message_from msg_value _32=50000000
+        SUB	//  marketplace_info fwd_fee message_from _33
+        ROT	//  marketplace_info message_from _33 fwd_fee
+        SUB	//  marketplace_info message_from new_fwd_amount
+        DUP	//  marketplace_info message_from new_fwd_amount new_fwd_amount
+        0 LESSINT	//  marketplace_info message_from new_fwd_amount _37
+        229 THROWIFNOT
+        s0 s2 XCHG	//  new_fwd_amount message_from marketplace_info
+        load_marketplace_info CALLDICT	//  new_fwd_amount message_from marketplace_address
+        ROT	//  message_from marketplace_address new_fwd_amount
+        send_nft INLINECALLDICT
+        0 THROW
+      }>ELSE<{
+        4 BLKDROP	// 
+      }>
+    }>ELSE<{
+      6 BLKDROP	// 
+    }>
+  }>
+  recv_external PROC:<{
+    //  in_msg_body
+    DROP	// 
+  }>
+}END>c

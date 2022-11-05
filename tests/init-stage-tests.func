@@ -1,0 +1,169 @@
+#pragma version >=0.2.0;
+
+const slice nft_address = "EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"a;
+const slice owner_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
+
+int __test_get_init_mode(){
+
+    (int gas_used, tuple stack) = invoke_method(get_sell_info, []);
+    throw_unless(91, stack.tuple_length() == 3);
+
+    ;; Init mode must be 0
+    throw_unless(92, stack.first() == 0);
+
+    throw_unless(93, equal_slices(stack.second(), nft_address));
+    throw_unless(94, equal_slices(stack.third(), owner_address));
+
+    return gas_used;
+}
+
+builder generate_ownership_assigned(slice prev_owner){
+    ;; ownership_assigned#05138d91 query_id:uint64 prev_owner:MsgAddress
+    ;; forward_payload:(Either Cell ^Cell) = InternalMsgBody;
+
+    builder b = begin_cell();
+    b~store_uint(op::nft::ownership_assigned, 32);
+    b~store_uint(0, 64);
+    b = b.store_slice(prev_owner);
+    b~store_int(0, 1);
+
+    return b;
+}
+
+[int, int] __test_init(){
+    ;; 0. Try to deploy contract
+    cell nft_ownership_message = generate_internal_message_custom(
+            0, ;; bounce
+            one_ton, ;; ton_amount
+            0, ;; init_state
+            begin_cell(), ;; payload
+            owner_address, ;; src
+            my_address(), ;; dest
+            0); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            0, ;; msg_value
+            nft_ownership_message, ;; in_msg_full
+            begin_cell().end_cell().begin_parse()]; ;; in_msg_body
+
+    (int gas_used_1, _) = invoke_method(recv_internal, internal_message_stack);
+    (_, tuple stack) = invoke_method(get_sell_info, []);
+    ;; Init mode must be 1
+    throw_unless(92, stack.first() == 0);
+
+    ;; Nft address & owner must not be changed
+    throw_unless(93, equal_slices(stack.second(), nft_address));
+    throw_unless(94, equal_slices(stack.third(), owner_address));
+
+    ;; 1. Try to send NFT to seller, it must change mode to inited
+    builder nft_ownership_body = generate_ownership_assigned(owner_address);
+
+    int fwd_fee = 10000;
+    cell nft_ownership_message = generate_internal_message_custom(
+            0, ;; bounce
+            one_ton, ;; ton_amount
+            0, ;; init_state
+            nft_ownership_body, ;; payload
+            nft_address, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            0, ;; msg_value
+            nft_ownership_message, ;; in_msg_full
+            nft_ownership_body.end_cell().begin_parse()]; ;; in_msg_body
+
+    (int gas_used_2, _) = invoke_method(recv_internal, internal_message_stack);
+    (_, tuple stack) = invoke_method(get_sell_info, []);
+    ;; Init mode must be 1
+    throw_unless(95, stack.first() == 1);
+
+    ;; Nft address & owner must not be changed
+    throw_unless(96, equal_slices(stack.second(), nft_address));
+    throw_unless(97, equal_slices(stack.third(), owner_address));
+
+    return [gas_used_1, gas_used_2];
+}
+
+[int, int] __test_init_not_our_owner(){
+    ;; 2. Try to send NFT owned not by needed owner, it must be sended back
+    slice random_owner = generate_any_address(1);
+    builder nft_not_our = generate_ownership_assigned(random_owner);
+
+    int fwd_fee = 10000;
+    cell nft_not_our_message = generate_internal_message_custom(
+            0, ;; bounce
+            one_ton, ;; ton_amount
+            0, ;; init_state
+            nft_not_our, ;; payload
+            nft_address, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            one_ton, ;; msg_value
+            nft_not_our_message, ;; in_msg_full
+            nft_not_our.end_cell().begin_parse()]; ;; in_msg_body
+
+    (int gas_used_3, _) = invoke_method(recv_internal, internal_message_stack);
+    ;; Check transfer message
+    tuple actions = parse_c5();
+    throw_unless(95, actions.tuple_length() == 1);
+
+    (int action_type, cell body, int mode) = actions.at(0).untriple();
+    throw_unless(96, action_type == 0);
+
+    ;; to nft
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(97, equal_slices(nft_address, parsed_msg.at(4)));
+
+    ;; transfer
+    slice body = parsed_msg.at(8);
+    int op = body~load_uint(32);
+    int query_id = body~load_uint(64);
+    slice new_onwer = body~load_msg_addr();
+
+    throw_unless(98, op == op::nft::transfer);
+    throw_unless(99, equal_slices(new_onwer, random_owner));
+
+    (_, tuple stack) = invoke_method(get_sell_info, []);
+    ;; Init mode must be 0
+    throw_unless(100, stack.first() == 0);
+
+    ;; Nft address & owner must not be changed
+    throw_unless(101, equal_slices(stack.second(), nft_address));
+    throw_unless(102, equal_slices(stack.third(), owner_address));
+
+    ;; 3. Try to send NFT owned not by needed owner but with not enough money
+    builder nft_not_our = generate_ownership_assigned(generate_any_address(1));
+
+    int fwd_fee = 10000;
+    cell nft_not_our_message = generate_internal_message_custom(
+            0, ;; bounce
+            one_ton, ;; ton_amount
+            0, ;; init_state
+            nft_not_our, ;; payload
+            nft_address, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            10000, ;; msg_value
+            nft_not_our_message, ;; in_msg_full
+            nft_not_our.end_cell().begin_parse()]; ;; in_msg_body
+
+    int gas_used_4 = invoke_method_expect_fail(recv_internal, internal_message_stack);
+    (_, tuple stack) = invoke_method(get_sell_info, []);
+    ;; Init mode must be 0
+    throw_unless(103, stack.first() == 0);
+
+    ;; Nft address & owner must not be changed
+    throw_unless(104, equal_slices(stack.second(), nft_address));
+    throw_unless(105, equal_slices(stack.third(), owner_address));
+
+    return [gas_used_3, gas_used_4];
+}

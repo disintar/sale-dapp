@@ -1,0 +1,6 @@
+nft_sale:
+  data: fift/data.fif
+  func:
+    - func/contract.func
+  tests:
+    - tests/tests.func

@@ -1,0 +1,24 @@
+(int, slice, slice) load_data() inline_ref {
+    slice data = get_data().begin_parse();
+
+    ;; 0 - Not inited
+    ;; 1 - Inited, ready for accept coins | new configuration
+    ;; 2 - Closed, NFT was bought
+    ;; 3 - Closed, seller was canceled
+    int current_mode = data~load_uint(8);
+
+    ;; NFT which we want to sell
+    slice nft_address = data~load_msg_addr();
+    slice deployer = data~load_msg_addr();
+
+    return (current_mode, nft_address, deployer);
+}
+
+() store_data(int current_mode, slice nft_address, slice deployer) impure inline_ref {
+    builder b = begin_cell();
+    b~store_uint(current_mode, 8);
+    b = store_slice(b, nft_address);
+    b = store_slice(b, deployer);
+
+    set_data(b.end_cell());
+}
