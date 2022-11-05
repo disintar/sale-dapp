@@ -2,3 +2,12 @@ const int op::nft::transfer = 0x5fcc3d14;
 const int op::nft::ownership_assigned = 0x05138d91;
 
 const int op::ft::transfer_notification = 0x7362d09c;
+
+
+const int op::seller::change_price = 0x0000000a;
+
+;; Mode 2 (nft alredy bought)
+const int op::seller::send_nft = 0x000000a0;
+
+;; Admin config
+const int op::seller::admin_send_message = 0x00000a00;

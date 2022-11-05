@@ -7,6 +7,7 @@
 
 #include "messages.func";
 #include "get_methods.func";
+#include "admin_methods.func";
 
 
 (slice, int) parse_in_msg(cell in_msg_full_cell) inline {
@@ -28,13 +29,27 @@
     (slice message_from, int fwd_fee) = parse_in_msg(in_msg_full);
 
     ;; handle internal messages
-    (int mode, slice nft_address, slice deployer_address) = load_data();
+    (int mode,
+            slice nft_address,
+            slice deployer_address,
+            slice buyer,
+            cell sell_config,
+            cell price_config) = load_data();
+
 
     ;; uninited mode, wait for nft
     if (mode == 0) {
         if (equal_slices(message_from, deployer_address)) {
-            ;; Just allow deploy from deployer
-            throw(0);
+            if (slice_bits(in_msg_body) >= 32) {
+                ;; TODO: test admin interface
+                ;; try process admin messages
+                int op = in_msg_body~load_uint(32);
+                int exit_code = process_admin(op, in_msg_body);
+                throw(exit_code);
+            } else {
+                ;; Just allow deploy from deployer
+                throw(0);
+            }
         }
 
         ;; It's easy just to drop all messages
@@ -62,7 +77,12 @@
 
         if (is_our_nft & is_ownership_assigned & deployer_is_prev_owner) {
             ;; All good, need to initialize contract
-            store_data(1, nft_address, deployer_address);
+            store_data(1,
+                    nft_address,
+                    deployer_address,
+                    buyer,
+                    sell_config,
+                    price_config);
             throw(0);
         } elseif (op == op::nft::ownership_assigned) {
             ;; We got not our nft
@@ -77,6 +97,8 @@
             throw(0);
         } elseif (op == op::ft::transfer_notification) {
             ;; We got Jettons, but current mode is not inited, so just send them back
+            ;; TODO: bounce Jettons
+            throw(0);
         } else {
             int new_fwd_amount = msg_value - little_gas_amount - fwd_fee;
             throw_unless(229, new_fwd_amount > 0);
@@ -86,13 +108,55 @@
             throw(0);
         }
     } elseif (mode == 1) { ;; Seller is inited
-        ;; Here we can buy NFT or change settings
-    } elseif (mode == 2) { ;; NFT was bought
-        ;; Here we need to allow transfer nft to owner one more time
-        ;; Because it can be that thereis not enough value for gas
+        ;; Change settings & admin control
+        if (equal_slices(message_from, deployer_address)) {
+            ;; Here we can buy NFT or change settings
+            int op = in_msg_body~load_uint(32);
+
+            ;; Change price
+            ;; TODO: add tests
+            if (op == op::seller::change_price) {
+                cell new_price_config = in_msg_body~load_ref();
+                store_data(1,
+                        nft_address,
+                        deployer_address,
+                        buyer,
+                        sell_config,
+                        new_price_config);
+                throw(0);
+            } else { ;; or process admin stuff
+                int exit_code = process_admin(op, in_msg_body);
+                throw(exit_code);
+            }
+        } else {
+            ;; TODO: Buy NFT
+            throw(0);
+        }
+
+    }
+
+    int op = in_msg_body~load_uint(32);
+
+    if (mode == 2) { ;; NFT was bought
+        if (equal_slices(message_from, buyer)) {
+            if (op == op::seller::send_nft) { ;; send nft one more time
+                ;; TODO: send nft
+                throw(0);
+            } else { ;; or process admin stuff
+                int exit_code = process_admin(op, in_msg_body);
+                throw(exit_code);
+            }
+        }
     } elseif (mode == 3) { ;; Seller was canceled
-        ;; Here we need to allow transfer nft to seller deployer one more time
-        ;; Because it can be that thereis not enough value for gas
+        if (equal_slices(message_from, deployer_address)) {
+            if (op == op::seller::send_nft) { ;; send nft one more time
+                ;; TODO: send nft
+                throw(0);
+            } else { ;; or process admin stuff
+                int exit_code = process_admin(op, in_msg_body);
+                throw(exit_code);
+            }
+        }
     }
 
 }

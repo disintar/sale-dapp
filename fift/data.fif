@@ -4,10 +4,31 @@
 // nft address
 "EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"  $>trySmca 2constant nft_address
 "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant deployer_address
+"EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant royalty_address
 
+// 1023bits
+// 8 mode
+// 32 mode
+// 267 addr * 3 = 801
 
 <b
    0 8 u, // mode
+   now 32 u, // unix time (for unique address)
    nft_address Addr, // nft which we want to sell
-   deployer_address Addr,
+   deployer_address Addr, // nft owner (which is also deployer)
+   0 2 u,
+
+   <b
+       0 16 u, // marketplace numerator
+       0 16 u, // marketplace denominator
+       0 16 u, // royalty numerator
+       0 16 u, // royalty denominator
+       royalty_address Addr, // royalty beneficiar
+   b> ref, // marketplace & royalty config
+
+   <b
+       1 1 u, // is price in TON?
+       1000000000 Gram, // price value
+   b> ref, // price & value config
+
 b>

@@ -1,0 +1,21 @@
+int process_admin(int op, slice in_msg_body) inline_ref {
+    int exit_code = 0;
+
+    ;; Allow to send custom messages from seller contract
+    ;; So you can don't care about nfts and fts
+    if (op == op::seller::admin_send_message) {
+        in_msg_body~touch();
+        if (in_msg_body.slice_refs()) {
+            var mode = in_msg_body~load_uint(8);
+            send_raw_message(in_msg_body~load_ref(), mode);
+        }
+        in_msg_body.end_parse();
+    } else {
+        ;; Admin OP not found
+        exit_code = 179;
+    }
+
+    return exit_code;
+}
+
+
