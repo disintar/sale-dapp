@@ -18,7 +18,7 @@
    now 32 u, // unix time (for unique address)
    nft_address Addr, // nft which we want to sell
    deployer_address Addr, // nft owner (which is also deployer)
-   0 2 u,
+   0 2 u, // buyer
 
    <b
        5 16 u, // marketplace numerator
@@ -31,5 +31,7 @@
    <b
        1 1 u, // is price in TON?
        1000000000 Gram, // price value
+       0 2 u, // If sale is only for one user - you need to define it here
+       0 32 u, // If sale is limited in time - define end time here
    b> ref, // price & value config
 b>

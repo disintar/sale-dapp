@@ -25,8 +25,11 @@ _ set_fake_init_data() impure {
     main_data = store_ref(main_data, sell_config_cell);
 
     builder price_config = begin_cell();
-    price_config = store_uint(price_config, 1, 1);
-    price_config = store_grams(price_config, one_ton * 100);
+    price_config = store_uint(price_config, 1, 1); ;; is_ton
+    price_config = store_grams(price_config, one_ton * 100); ;; price
+    price_config = store_uint(price_config, 0, 2); ;; addr none - limited sale for specific user
+    price_config = store_uint(price_config, 0, 32); ;; limited in time sale
+
     cell price_config_cell = price_config.end_cell();
 
     main_data = store_ref(main_data, price_config_cell);

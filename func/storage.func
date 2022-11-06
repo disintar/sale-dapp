@@ -47,13 +47,15 @@
 }
 
 
-(int, int) parse_price_config(cell price_config){
+(int, int, slice, int) parse_price_config(cell price_config){
     slice price_config_cs = price_config.begin_parse();
     int is_ton = price_config_cs~load_uint(1);
     int price = price_config_cs~load_grams();
+    slice limited_address = price_config_cs~load_msg_addr();
+    int end_time = price_config_cs~load_uint(32);
     price_config_cs.end_parse();
 
-    return (is_ton, price);
+    return (is_ton, price, limited_address, end_time);
 }
 
 (int, int, int, int, slice) parse_sell_config(cell sell_config){

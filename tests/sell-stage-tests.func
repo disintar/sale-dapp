@@ -1,5 +1,8 @@
 #include "utils/sell-storage.func";
 
+;; TODO: add tests for buying with exact number on TON
+;; TODO: buy, but with gas fail on transfer, then use mode 2 to get item
+
 int __test_try_to_buy(){
     set_fake_data();
     slice random_tolstosum = generate_any_address(1);

@@ -117,9 +117,9 @@
             int op = in_msg_body~load_uint(32);
 
             ;; Change price
-            ;; TODO: add tests
-            ;; TODO: add cancel
-            if (op == op::seller::change_price) {
+            if (op == op::seller::update_sale) {
+                ;; TODO: add tests
+
                 cell new_price_config = in_msg_body~load_ref();
                 store_data(1,
                         nft_address,
@@ -128,19 +128,32 @@
                         sell_config,
                         new_price_config);
                 throw(0);
+            } elseif (op == op::seller::cancel_sell) {
+                ;; TODO: add tests
+                store_data(3, ;; set contract to close
+                        nft_address,
+                        deployer_address,
+                        buyer,
+                        sell_config,
+                        price_config);
+
+                raw_reserve(100000, 0); ;; save little ammount
+                send_nft(nft_address, deployer_address, -1); ;; transfer nft back to owner
+                throw(0);
+            } else {
+                throw(179);
             }
 
-            ;; Here we can allow admin commands
+            ;; Here we can't allow admin commands
             ;; Because seller can transfer NFT back
             ;; Need to think of limitations on sending transfer messages to assets inside contract
-            throw(179);
             ;;             else { ;; or process admin stuff
             ;;                 int exit_code = process_admin(op, in_msg_body);
             ;;                 throw(exit_code);
             ;;             }
         } else {
             ;; Try to buy
-            (int is_ton, int price) = parse_price_config(price_config);
+            (int is_ton, int price, slice limited_address, int end_at) = parse_price_config(price_config);
             (int marketplace_numerator,
                     int marketplace_denominator,
                     int royalty_numerator,
@@ -148,6 +161,47 @@
                     slice royalty_destanation) = parse_sell_config(sell_config);
             int market_fee = 0;
             int royalty_fee = 0;
+
+            ;; TODO: test those limits
+            if ((~ preload_uint(limited_address, 2) == 0) & (~ equal_slices(message_from, limited_address))) {
+                ;; Send money back
+                int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
+                throw_unless(229, new_fwd_amount > 0);
+                send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Not for you 🌊", 2);
+                throw(0);
+            }
+
+            ;; TODO: test this
+            if (now() >= end_at) {
+                store_data(3, ;; set contract to close
+                        nft_address,
+                        deployer_address,
+                        buyer,
+                        sell_config,
+                        price_config);
+
+                ;; Send money back
+                int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
+                if (new_fwd_amount > 0 & is_ton) {
+                    send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Out of time ⏰", 2);
+                } elseif (new_fwd_amount > 0) {
+                    ;; TODO: send jettons back
+                }
+
+                raw_reserve(100000, 0); ;; save little ammount
+                send_nft(nft_address, deployer_address, -1); ;; transfer nft back to owner
+                throw(0);
+            }
+
+            (int nft_wc, _) = parse_std_addr(nft_address);
+            (int buyer_wc, _) = parse_std_addr(message_from);
+            if (buyer_wc != nft_wc) {
+                ;; Send money back
+                int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
+                throw_unless(57, new_fwd_amount > 0);
+                send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Not same WC 🌭", 2);
+                throw(0);
+            }
 
             if ((marketplace_numerator > 0) & (marketplace_denominator > 0)) {
                 market_fee = min(price, muldiv(price, marketplace_numerator, marketplace_denominator));
@@ -163,7 +217,7 @@
 
             if (is_ton == 1) {
                 ;; Buy with TON
-                if (msg_value - price - royalty_fee - market_fee - very_little_gas_amount <= 0) {
+                if (msg_value - price - royalty_fee - market_fee - little_gas_amount <= 0) {
                     ;; Send money back
                     int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
                     throw_unless(229, new_fwd_amount > 0);
@@ -199,6 +253,7 @@
 
     int op = in_msg_body~load_uint(32);
 
+    ;; TODO: improve functionality
     if (mode == 2) { ;; NFT was bought
         if (equal_slices(message_from, buyer)) {
             if (op == op::seller::send_nft) { ;; send nft one more time
