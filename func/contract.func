@@ -252,6 +252,7 @@
                         int amount = in_msg_body~load_coins();
                         slice sender = in_msg_body~load_msg_addr();
 
+                        ;; TODO: think if it's possible to transfer jettons back with 1 fwd_fee
                         ;; Ensure, that we have enough money for transfer
                         int nalogi = fwd_fee * 4;
                         int new_fwd_amount = msg_value - nalogi - little_gas_amount;
@@ -261,6 +262,7 @@
                         int change = amount - price - royalty_fee - market_fee;
                         if (change < 0) {
                             send_jettons_with_text(message_from, sender, new_fwd_amount + fwd_fee, amount, "Not enought jettons 🌚");
+                            throw(0);
                         } else {
                             send_jettons_with_text(message_from, marketplace, fwd_fee, market_fee, "Market fee 💫");
                             send_jettons_with_text(message_from, royalty_destanation, fwd_fee, royalty_fee, "Your royalty 🍁");
