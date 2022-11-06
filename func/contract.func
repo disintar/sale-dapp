@@ -38,23 +38,33 @@
             cell sell_config,
             cell price_config) = load_data();
 
-    ~strdump_int("Contract mode", mode);
+    ~strdump_int("🔢 Contract mode", mode);
     ;; uninited mode, wait for nft
     if (mode == 0) {
         if (equal_slices(message_from, deployer_address)) {
+            ~strdump_safe("Got message from deployer");
+
             if (slice_bits(in_msg_body) >= 32) {
+                ~strdump_safe("Process admin interface");
+
                 ;; TODO: test admin interface
                 ;; try process admin messages
                 int op = in_msg_body~load_uint(32);
                 int exit_code = process_admin(op, in_msg_body);
                 throw(exit_code);
             } else {
+                ~strdump_safe("Process init of contract");
+
                 ;; Just allow deploy from deployer
 
+                ;; TODO: test init with jetton address
                 ;; If there will be an jetton sale
                 ;; Allow to set own jetton address on initialization
                 if (slice_bits(in_msg_body) > 2) {
+                    ~strdump_safe("Process set of jetton address");
+
                     if (in_msg_body.preload_uint(2) != 0) {
+                        ~strdump_safe("Change jetton address");
                         slice expected_jetton_address = in_msg_body~load_msg_addr();
                         cell new_price_config = repack_price_config_with_jetton_address(price_config, expected_jetton_address);
 
@@ -84,7 +94,6 @@
         int query_id = in_msg_body~load_uint(64);
         slice prev_owner_address = in_msg_body~load_msg_addr();
 
-
         ;; We expect thet previus owner of nft is deployer of this contract
         int deployer_is_prev_owner = equal_slices(prev_owner_address, deployer_address);
 
@@ -95,6 +104,8 @@
         int is_ownership_assigned = op == op::nft::ownership_assigned;
 
         if (is_our_nft & is_ownership_assigned & deployer_is_prev_owner) {
+            ~strdump_safe("Initialize contract");
+
             ;; All good, need to initialize contract
             store_data(1,
                     nft_address,
@@ -104,6 +115,8 @@
                     price_config);
             throw(0);
         } elseif (op == op::nft::ownership_assigned) {
+            ~strdump_safe("Got not our NFT, bouce it back");
+
             ;; We got not our nft
             ;; Try to send it back
 
@@ -115,6 +128,8 @@
             send_nft(message_from, prev_owner_address, new_fwd_amount + fwd_fee);
             throw(0);
         } else {
+            ~strdump_safe("Got strange stuff, try to bounce it");
+
             send_money_or_jettons_back_op(op, in_msg_body, message_from, msg_value, fwd_fee, "Error 🥂️");
         }
     } elseif (mode == 1) { ;; Seller is inited
@@ -197,6 +212,8 @@
 
             ;; TODO: test this
             if ((end_at != 0) & (now() >= end_at)) {
+                ~strdump_safe("Salse is limited in time, try bounce ⏰");
+
                 store_data(3, ;; set contract to close
                         nft_address,
                         deployer_address,
@@ -206,6 +223,7 @@
 
                 ;; Send money back
                 int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
+                ~strdump_int("Check have we got money on", royalty_fee);
 
                 ;; Need 100% sure this willn't fail
                 if (new_fwd_amount > 0) {
@@ -218,7 +236,7 @@
                 throw(0);
             }
 
-            ~strdump_int("Price full on start: ", price + royalty_fee + market_fee);
+            ~strdump_int("Price full on start", price + royalty_fee + market_fee);
 
             if (~ workchains_equal?(nft_address, message_from)) {
                 ~strdump_safe("Not same WC 🌭️");
@@ -228,16 +246,16 @@
             if ((marketplace_numerator > 0) & (marketplace_denominator > 0)) {
                 market_fee = min(price, muldiv(price, marketplace_numerator, marketplace_denominator));
             }
-            ~strdump_int("Market fee calculated: ", market_fee);
+            ~strdump_int("Market fee calculated", market_fee);
             price -= market_fee;
 
             if ((royalty_numerator > 0) & (royalty_denominator > 0) & (price > 0)) {
                 royalty_fee = min(price, muldiv(price, royalty_numerator, royalty_denominator));
             }
-            ~strdump_int("Royalty fee calculated: ", royalty_fee);
+            ~strdump_int("Royalty fee calculated", royalty_fee);
             price -= royalty_fee;
-            ~strdump_int("Price final calculated: ", price);
-            ~strdump_int("Price full final: ", price + royalty_fee + market_fee);
+            ~strdump_int("Price final calculated", price);
+            ~strdump_int("Price full final", price + royalty_fee + market_fee);
 
             if (is_ton == 1) {
                 ~strdump_safe("Process buy request for TON 💎");

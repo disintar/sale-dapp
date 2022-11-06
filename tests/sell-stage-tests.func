@@ -95,6 +95,56 @@ int __test_try_to_buy(){
 }
 
 
+int __test_try_to_buy_no_funds(){
+    var address = random();
+
+    slice random_wallet = begin_cell()
+            .store_uint(2, 2) ;; addr_std$10
+            .store_uint(0, 1) ;; anycast nothing
+            .store_int(0, 8) ;; workchain_id
+            .store_uint(address, 256)
+            .end_cell()
+            .begin_parse();
+
+    ;; it will not work because wallet generated in -1 chain
+    ;;     slice random_wallet = generate_any_address(1);
+
+    int item_cost = 1 * one_ton;
+    int royalty = 5;
+    int marketplace_fee = 5;
+
+    set_fake_data(
+            item_cost, ;; price 1 ton
+            royalty,
+            marketplace_fee,
+            begin_cell().store_uint(0, 2).end_cell().begin_parse() ;; limited sale for specific user
+    );
+
+
+    int fwd_fee = 10000;
+    cell buy_nft_message = generate_internal_message_custom(
+            0, ;; bounce
+            1234, ;; ton_amount - really big money here
+            0, ;; init_state
+            begin_cell(), ;; payload
+            random_wallet, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            1234, ;; msg_value
+            buy_nft_message, ;; in_msg_full
+            ""]; ;; in_msg_body
+
+    var (int exit_code, int gas_used, return_values) = invoke_method_full(recv_internal, internal_message_stack);
+    throw_unless(95, exit_code == 57);
+
+    return gas_used;
+}
+
+
+
 int __test_try_to_not_from_this_wc(){
     var address = random();
 
