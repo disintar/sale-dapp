@@ -224,7 +224,7 @@
                 int exit_code = process_admin(op, in_msg_body);
                 throw(exit_code);
             }
-        }else {
+        } else {
             throw(179);
         }
     }

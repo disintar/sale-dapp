@@ -5,9 +5,15 @@ int process_admin(int op, slice in_msg_body) inline_ref {
     ;; So you can don't care about nfts and fts
     if (op == op::seller::admin_send_message) {
         in_msg_body~touch();
-        if (in_msg_body.slice_refs()) {
-            var mode = in_msg_body~load_uint(8);
-            send_raw_message(in_msg_body~load_ref(), mode);
+
+        ;; We need to have some little ammount on contract
+        ;; So you couldn't trick some buyer
+        raw_reserve(10000000, 0);
+
+        while (in_msg_body.slice_refs()) {
+            ;; TODO: add support of custom mode, but with restrictions on 32
+            ;; TODO: allow send messages in sell mode, but not to assets
+            send_raw_message(in_msg_body~load_ref(), 1);
         }
         in_msg_body.end_parse();
     } else {

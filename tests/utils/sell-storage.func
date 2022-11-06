@@ -1,0 +1,35 @@
+const slice nft_address = "EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"a;
+const slice owner_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
+
+
+_ set_fake_data() impure {
+    builder  main_data = begin_cell();
+    main_data = store_uint(main_data, 1, 8); ;; sell mode
+    main_data = store_slice(main_data, nft_address); ;; nft
+    main_data = store_slice(main_data, owner_address); ;; owner
+    main_data = store_uint(main_data, 0, 2); ;; buyer (addr none)
+
+    builder sell_config = begin_cell();
+
+    ;; Marketplace fee
+    sell_config = store_uint(sell_config, 10, 16);
+    sell_config = store_uint(sell_config, 100, 16);
+
+    ;; Royalty fee
+    sell_config = store_uint(sell_config, 5, 16);
+    sell_config = store_uint(sell_config, 100, 16);
+    sell_config = store_slice(sell_config, owner_address); ;; royalty beneficiar
+
+    cell sell_config_cell = sell_config.end_cell();
+    main_data = store_ref(main_data, sell_config_cell);
+
+    builder price_config = begin_cell();
+    price_config = store_uint(price_config, 1, 1);
+    price_config = store_grams(price_config, one_ton * 100);
+    cell price_config_cell = price_config.end_cell();
+
+    main_data = store_ref(main_data, price_config_cell);
+
+    set_data(main_data.end_cell());
+}
+

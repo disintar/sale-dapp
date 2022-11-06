@@ -4,9 +4,9 @@
 
 
 // nft address
-"EQBJllkuNRjvgf1SkY7LPtZitddOesGnsboZXq7uKhC2okyE"  $>trySmca 2constant nft_address
-"kQBlxuPNk1LAWg2tktudUAJvL7jZWp0IWJDqB5lMelU-x4A3"  $>trySmca 2constant deployer_address
-"kQBlxuPNk1LAWg2tktudUAJvL7jZWp0IWJDqB5lMelU-x4A3"  $>trySmca 2constant royalty_address
+"EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"  $>trySmca 2constant nft_address
+"EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant deployer_address
+"EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant royalty_address
 
 // 1023bits
 // 8 mode

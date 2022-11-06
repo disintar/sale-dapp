@@ -1,9 +1,8 @@
 #pragma version >=0.2.0;
-
-const slice nft_address = "EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"a;
-const slice owner_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
+#include "utils/init-storage.func";
 
 int __test_get_init_mode(){
+    set_fake_init_data();
 
     (int gas_used, tuple stack) = invoke_method(get_sell_info, []);
     throw_unless(91, stack.tuple_length() == 3);
@@ -31,6 +30,8 @@ builder generate_ownership_assigned(slice prev_owner){
 }
 
 [int, int] __test_init(){
+    set_fake_init_data();
+
     ;; 0. Try to deploy contract
     cell nft_ownership_message = generate_internal_message_custom(
             0, ;; bounce
@@ -88,6 +89,8 @@ builder generate_ownership_assigned(slice prev_owner){
 }
 
 [int, int] __test_init_not_our_owner(){
+    set_fake_init_data();
+
     ;; 2. Try to send NFT owned not by needed owner, it must be sended back
     slice random_owner = generate_any_address(1);
     builder nft_not_our = generate_ownership_assigned(random_owner);
