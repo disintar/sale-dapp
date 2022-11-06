@@ -4,27 +4,256 @@
 ;; TODO: buy, but with gas fail on transfer, then use mode 2 to get item
 
 int __test_try_to_buy(){
-    set_fake_data();
-    slice random_tolstosum = generate_any_address(1);
+    var address = random();
+
+    slice random_wallet = begin_cell()
+            .store_uint(2, 2) ;; addr_std$10
+            .store_uint(0, 1) ;; anycast nothing
+            .store_int(0, 8) ;; workchain_id
+            .store_uint(address, 256)
+            .end_cell()
+            .begin_parse();
+
+    ;; it will not work because wallet generated in -1 chain
+    ;;     slice random_wallet = generate_any_address(1);
+
+    int money_to_send = one_ton * 1000;
+    int item_cost = 1 * one_ton;
+    int royalty = 5;
+    int marketplace_fee = 5;
+
+    set_fake_data(
+            item_cost, ;; price 1 ton
+            royalty,
+            marketplace_fee,
+            begin_cell().store_uint(0, 2).end_cell().begin_parse() ;; limited sale for specific user
+    );
+
 
     int fwd_fee = 10000;
-    cell tolstosum_buy_nft_message = generate_internal_message_custom(
+    cell buy_nft_message = generate_internal_message_custom(
             0, ;; bounce
-            one_ton * 10000, ;; ton_amount - really big money here
+            money_to_send, ;; ton_amount - really big money here
             0, ;; init_state
             begin_cell(), ;; payload
-            random_tolstosum, ;; src
+            random_wallet, ;; src
             my_address(), ;; dest
             fwd_fee); ;; fwd_fee
 
     [int, int, cell, slice] internal_message_stack = [
             one_ton / 10, ;; my_balance
-            one_ton * 10000, ;; msg_value
-            tolstosum_buy_nft_message, ;; in_msg_full
+            money_to_send, ;; msg_value
+            buy_nft_message, ;; in_msg_full
             ""]; ;; in_msg_body
 
-    (int gas_used_2, _) = invoke_method(recv_internal, internal_message_stack);
+    (int gas_used, _) = invoke_method(recv_internal, internal_message_stack);
 
-    ;; TODO: tests on messages
-    return 0;
+    tuple actions = parse_c5();
+
+    ;; 1 - send marketplace_fee
+    ;; 2 - send royalty
+    ;; 3 - send rest to seller
+    ;; 4 - reserve 100000
+    ;; 5 - send rest to nft and transfer it
+    throw_unless(95, actions.tuple_length() == 5);
+
+    ;; First message send to marketplace
+    (int action_type, cell body, int mode) = actions.at(0).untriple();
+    throw_unless(96, action_type == 0);
+
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(97, equal_slices(marketplace, parsed_msg.at(4)));
+
+    int market_fee_check = muldiv(item_cost, marketplace_fee, 100);
+    throw_unless(98, market_fee_check == parsed_msg.at(5));
+    ~strdump_int("Market fee checked", market_fee_check);
+
+    ;; Second message send to royalty
+    (int action_type, cell body, int mode) = actions.at(1).untriple();
+    throw_unless(99, action_type == 0);
+
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(100, equal_slices(marketplace, parsed_msg.at(4)));
+
+    int royalty_fee_check = muldiv(item_cost - market_fee_check, royalty, 100);
+    throw_unless(101, royalty_fee_check == parsed_msg.at(5));
+    ~strdump_int("Roaylty checked", royalty_fee_check);
+
+    ;; Third message send to deployer
+    (int action_type, cell body, int mode) = actions.at(2).untriple();
+    throw_unless(102, action_type == 0);
+
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(103, equal_slices(owner_address, parsed_msg.at(4)));
+
+    int price_check = item_cost - market_fee_check - royalty_fee_check;
+    throw_unless(104, price_check == parsed_msg.at(5));
+    ~strdump_int("Price checked", price_check);
+    throw_unless(105, item_cost == price_check + market_fee_check + royalty_fee_check);
+
+    return gas_used;
+}
+
+
+int __test_try_to_not_from_this_wc(){
+    var address = random();
+
+    slice random_wallet = begin_cell()
+            .store_uint(2, 2) ;; addr_std$10
+            .store_uint(0, 1) ;; anycast nothing
+            .store_int(-1, 8) ;; workchain_id: -1
+            .store_uint(address, 256)
+            .end_cell()
+            .begin_parse();
+
+    ;; it will not work because wallet generated in -1 chain
+    ;;     slice random_wallet = generate_any_address(1);
+
+    int money_to_send = one_ton * 1000;
+    int item_cost = 1 * one_ton;
+    int royalty = 5;
+    int marketplace_fee = 5;
+
+    set_fake_data(
+            item_cost, ;; price 1 ton
+            royalty,
+            marketplace_fee,
+            begin_cell().store_uint(0, 2).end_cell().begin_parse() ;; limited sale for specific user
+    );
+
+
+    int fwd_fee = 10000;
+    cell buy_nft_message = generate_internal_message_custom(
+            0, ;; bounce
+            money_to_send, ;; ton_amount - really big money here
+            0, ;; init_state
+            begin_cell(), ;; payload
+            random_wallet, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            money_to_send, ;; msg_value
+            buy_nft_message, ;; in_msg_full
+            ""]; ;; in_msg_body
+
+    (int gas_used, _) = invoke_method(recv_internal, internal_message_stack);
+
+    tuple actions = parse_c5();
+    throw_unless(95, actions.tuple_length() == 1);
+
+    return gas_used;
+}
+
+
+int __test_try_fail_to_buy_limited_sale(){
+    var address = random();
+
+    slice random_wallet = begin_cell()
+            .store_uint(2, 2) ;; addr_std$10
+            .store_uint(0, 1) ;; anycast nothing
+            .store_int(0, 8) ;; workchain_id: -1
+            .store_uint(address, 256)
+            .end_cell()
+            .begin_parse();
+
+    slice random_wallet_limited = begin_cell()
+            .store_uint(2, 2) ;; addr_std$10
+            .store_uint(0, 1) ;; anycast nothing
+            .store_int(0, 8) ;; workchain_id: -1
+            .store_uint(address + 1, 256) ;; this is deffrent from random_wallet
+            .end_cell()
+            .begin_parse();
+
+    ;; it will not work because wallet generated in -1 chain
+    ;;     slice random_wallet = generate_any_address(1);
+
+    int money_to_send = one_ton * 1000;
+    int item_cost = 1 * one_ton;
+    int royalty = 5;
+    int marketplace_fee = 5;
+
+    set_fake_data(
+            item_cost, ;; price 1 ton
+            royalty,
+            marketplace_fee,
+            random_wallet_limited ;; limited sale for specific user
+    );
+
+
+    int fwd_fee = 10000;
+    cell buy_nft_message = generate_internal_message_custom(
+            0, ;; bounce
+            money_to_send, ;; ton_amount - really big money here
+            0, ;; init_state
+            begin_cell(), ;; payload
+            random_wallet, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            money_to_send, ;; msg_value
+            buy_nft_message, ;; in_msg_full
+            ""]; ;; in_msg_body
+
+    (int gas_used, _) = invoke_method(recv_internal, internal_message_stack);
+
+    tuple actions = parse_c5();
+    throw_unless(95, actions.tuple_length() == 1);
+
+    return gas_used;
+}
+
+
+int __test_try_to_buy_limited_sale(){
+    var address = random();
+
+    slice random_wallet = begin_cell()
+            .store_uint(2, 2) ;; addr_std$10
+            .store_uint(0, 1) ;; anycast nothing
+            .store_int(0, 8) ;; workchain_id: -1
+            .store_uint(address, 256)
+            .end_cell()
+            .begin_parse();
+
+    ;; it will not work because wallet generated in -1 chain
+    ;;     slice random_wallet = generate_any_address(1);
+
+    int money_to_send = one_ton * 1000;
+    int item_cost = 1 * one_ton;
+    int royalty = 5;
+    int marketplace_fee = 5;
+
+    set_fake_data(
+            item_cost, ;; price 1 ton
+            royalty,
+            marketplace_fee,
+            random_wallet ;; limited sale for specific user
+    );
+
+
+    int fwd_fee = 10000;
+    cell buy_nft_message = generate_internal_message_custom(
+            0, ;; bounce
+            money_to_send, ;; ton_amount - really big money here
+            0, ;; init_state
+            begin_cell(), ;; payload
+            random_wallet, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            money_to_send, ;; msg_value
+            buy_nft_message, ;; in_msg_full
+            ""]; ;; in_msg_body
+
+    (int gas_used, _) = invoke_method(recv_internal, internal_message_stack);
+
+    tuple actions = parse_c5();
+    throw_unless(95, actions.tuple_length() == 5);
+
+    return gas_used;
 }

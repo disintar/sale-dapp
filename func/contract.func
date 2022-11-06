@@ -1,6 +1,7 @@
 #pragma version >=0.2.0;
 
 #include "asm/helpers.func";
+#include "asm/dump-utils.func";
 #include "op_codes.func";
 #include "magic_constants.func";
 #include "storage.func";
@@ -37,7 +38,7 @@
             cell sell_config,
             cell price_config) = load_data();
 
-
+    ~strdump_int("Contract mode", mode);
     ;; uninited mode, wait for nft
     if (mode == 0) {
         if (equal_slices(message_from, deployer_address)) {
@@ -120,11 +121,15 @@
         ;; Change settings & admin control
 
         if (equal_slices(message_from, deployer_address)) {
+            ~strdump_safe("Process message from deployer");
+
             ;; Here we can buy NFT or change settings
             int op = in_msg_body~load_uint(32);
 
             ;; Change price
             if (op == op::seller::update_sale) {
+                ~strdump_safe("Process update sale");
+
                 ;; TODO: add tests
                 cell new_price_config = in_msg_body~load_ref();
                 store_data(1,
@@ -135,6 +140,8 @@
                         new_price_config);
                 throw(0);
             } elseif (op == op::seller::cancel_sell) {
+                ~strdump_safe("Process cancel sale");
+
                 ;; TODO: add tests
                 store_data(3, ;; set contract to close
                         nft_address,
@@ -147,6 +154,7 @@
                 send_nft(nft_address, deployer_address, -1); ;; transfer nft back to owner
                 throw(0);
             } else {
+                ~strdump_safe("Command not found");
                 send_money_or_jettons_back_op(op, in_msg_body, message_from, msg_value, fwd_fee, "Error 🍭");
             }
 
@@ -158,6 +166,8 @@
             ;;                 throw(exit_code);
             ;;             }
         }  else {
+            ~strdump_safe("Process buy request 💸");
+
             ;; Try to buy
             (int marketplace_numerator,
                     int marketplace_denominator,
@@ -174,9 +184,15 @@
             int market_fee = 0;
             int royalty_fee = 0;
 
-            ;; TODO: test those limits
-            if ((~ preload_uint(limited_address, 2) == 0) & (~ equal_slices(message_from, limited_address))) {
-                send_money_or_jettons_back_body(in_msg_body, message_from, msg_value, fwd_fee, "Not for you ❤️");
+            ifnot (preload_uint(limited_address, 2) == 0) {
+                ~strdump_safe("Sale is limited, check 🔐");
+
+                ifnot (equal_slices(message_from, limited_address)) {
+                    ~strdump_safe("Not for you ❤️");
+                    send_money_or_jettons_back_body(in_msg_body, message_from, msg_value, fwd_fee, "Not for you ❤️");
+                }
+
+                ~strdump_safe("Sale is limited, all good 🔓");
             }
 
             ;; TODO: test this
@@ -193,6 +209,7 @@
 
                 ;; Need 100% sure this willn't fail
                 if (new_fwd_amount > 0) {
+                    ~strdump_safe("Out of time ⏰");
                     send_money_or_jettons_back_body(in_msg_body, message_from, msg_value, fwd_fee, "Out of time ⏰");
                 }
 
@@ -201,22 +218,30 @@
                 throw(0);
             }
 
-            ;; TODO: add tests
+            ~strdump_int("Price full on start: ", price + royalty_fee + market_fee);
+
             if (~ workchains_equal?(nft_address, message_from)) {
+                ~strdump_safe("Not same WC 🌭️");
                 send_money_or_jettons_back_body(in_msg_body, message_from, msg_value, fwd_fee, "Not same WC 🌭️");
             }
 
             if ((marketplace_numerator > 0) & (marketplace_denominator > 0)) {
                 market_fee = min(price, muldiv(price, marketplace_numerator, marketplace_denominator));
             }
+            ~strdump_int("Market fee calculated: ", market_fee);
             price -= market_fee;
 
             if ((royalty_numerator > 0) & (royalty_denominator > 0) & (price > 0)) {
                 royalty_fee = min(price, muldiv(price, royalty_numerator, royalty_denominator));
             }
+            ~strdump_int("Royalty fee calculated: ", royalty_fee);
             price -= royalty_fee;
+            ~strdump_int("Price final calculated: ", price);
+            ~strdump_int("Price full final: ", price + royalty_fee + market_fee);
 
             if (is_ton == 1) {
+                ~strdump_safe("Process buy request for TON 💎");
+
                 ;; Try to buy with TON
 
                 ;; Ok, in theory someone can send 1 jetton and many TON
@@ -227,14 +252,27 @@
 
                 ;; If price in TON is 0 - then contract is unconfigurated yet (just let this)
                 if ((msg_value - price - royalty_fee - market_fee - little_gas_amount <= 0) | (price == 0)) {
+                    ~strdump_safe("No funds 🌚");
                     send_money_or_jettons_back_body(in_msg_body, message_from, msg_value, fwd_fee, "No funds 🌚");
                 } else {
-                    send_message_with_text(marketplace, market_fee, "Market fee, sir 🤌", 1);
-                    send_message_with_text(royalty_destanation, royalty_fee, "Hey, your royalty, sir 🤌", 1);
+                    ~strdump_safe("💎 Funds is fine, process...");
 
-                    tuple wow = unsafe_to_tuple(["🤭", "😱", "🥳", "👀", "🫶"]);
-                    int wow_num = rand(5);
-                    send_message_with_text(deployer_address, price, wow.at(wow_num), 1);
+                    if (market_fee > 0) {
+                        ~strdump_int("💎 Send market fee to marketplace", market_fee);
+                        send_message_with_text(marketplace, market_fee, "Market fee, sir 🤌", 1);
+                    }
+
+                    if (royalty_fee > 0) {
+                        ~strdump_int("💎 Send royalty fee to royalty_destanation", royalty_fee);
+                        send_message_with_text(royalty_destanation, royalty_fee, "Hey, your royalty, sir 🤌", 1);
+                    }
+
+                    if (price > 0) {
+                        ~strdump_int("💎 Send rest of price to deployer", price);
+                        tuple wow = unsafe_to_tuple(["🤭", "😱", "🥳", "👀", "🫶"]);
+                        int wow_num = rand(5);
+                        send_message_with_text(deployer_address, price, wow.at(wow_num), 1);
+                    }
 
                     raw_reserve(100000, 0); ;; save little ammount
                     send_nft(nft_address, message_from, -1); ;; transfer nft
@@ -245,9 +283,10 @@
                             message_from, ;; change who was bought nft
                             sell_config,
                             price_config);
-                }
 
-                throw(0);
+                    ~strdump_safe("Item is bought 🥳 for 💎!");
+                    throw(0);
+                }
             } else {
                 ;; Try to buy with jettons
 

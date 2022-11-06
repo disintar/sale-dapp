@@ -1,5 +1,6 @@
 const slice nft_address = "EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"a;
 const slice owner_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
+const slice royalty_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
 
 
 _ set_fake_init_data() impure {
@@ -19,7 +20,7 @@ _ set_fake_init_data() impure {
     ;; Royalty fee
     sell_config = store_uint(sell_config, 5, 16);
     sell_config = store_uint(sell_config, 100, 16);
-    sell_config = store_slice(sell_config, owner_address); ;; royalty beneficiar
+    sell_config = store_slice(sell_config, royalty_address); ;; royalty beneficiar
 
     cell sell_config_cell = sell_config.end_cell();
     main_data = store_ref(main_data, sell_config_cell);

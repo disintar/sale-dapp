@@ -1,0 +1,51 @@
+;; thanks
+;; https://github.com/EmelyanenkoK/nominator_pool/blob/07da6387390adef1b1112df36bf8fd6dba3d1052/text_utils.fc
+slice encode_number_to_text(int number) {
+    int len = 0;
+    int value = 0;
+    int mult = 1;
+    do {
+        (number, int res) = number.divmod(10);
+        value = value + (res + 48) * mult;
+        mult = mult * 256;
+        len = len + 1;
+    } until (number == 0);
+
+    slice text = begin_cell().store_uint(value, len * 8).end_cell().begin_parse();
+    return text;
+}
+
+;; To disable log - remove impure to all functions
+;; To enable log - add impure to all functions
+forall X -> X ~strdump_safe_not_pretty(slice value) impure asm "STRDUMP";
+forall X -> X ~dump_safe(X value) impure asm "s0 DUMP";
+
+_ ~strdump_safe(slice text) impure {
+    slice text_extended = begin_cell()
+            .store_slice("[🌊] ")
+            .store_slice(text)
+            .end_cell()
+            .begin_parse();
+
+    ~strdump_safe_not_pretty(text_extended);
+}
+
+_ ~strdump_value(slice text, var value) impure {
+    slice text_extended = begin_cell().store_slice("[🍭] ")
+            .store_slice(text)
+            .store_slice(": ")
+            .end_cell()
+            .begin_parse();
+    ~strdump_safe_not_pretty(text_extended);
+    ~dump_safe(value);
+}
+
+_ ~strdump_int(slice text, int value) impure {
+    slice text_extended = begin_cell()
+            .store_slice("[👀] ")
+            .store_slice(text)
+            .store_slice(": ")
+            .store_slice(encode_number_to_text(value))
+            .end_cell().begin_parse();
+    ~strdump_safe_not_pretty(text_extended);
+}
