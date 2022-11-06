@@ -77,3 +77,16 @@
 
     return (is_ton, price, limited_address, end_time, my_jetton_address);
 }
+
+cell repack_price_config_with_jetton_address(cell price_config, slice jetton_address){
+    (_, int price, slice limited_address, int end_time, _) = parse_price_config(price_config);
+
+    builder new_price_config = begin_cell();
+    new_price_config = store_uint(new_price_config, 0, 1);
+    new_price_config = store_coins(new_price_config, price);
+    new_price_config = store_slice(new_price_config, limited_address);
+    new_price_config = store_uint(new_price_config, end_time, 32);
+    new_price_config = store_slice(new_price_config, jetton_address);
+
+    return new_price_config.end_cell();
+}

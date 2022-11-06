@@ -49,6 +49,22 @@
                 throw(exit_code);
             } else {
                 ;; Just allow deploy from deployer
+
+                ;; If there will be an jetton sale
+                ;; Allow to set own jetton address on initialization
+                if (slice_bits(in_msg_body) > 2) {
+                    if (in_msg_body.preload_uint(2) != 0) {
+                        slice expected_jetton_address = in_msg_body~load_msg_addr();
+                        cell new_price_config = repack_price_config_with_jetton_address(price_config, expected_jetton_address);
+
+                        store_data(0,
+                                nft_address,
+                                deployer_address,
+                                buyer,
+                                sell_config,
+                                new_price_config);
+                    }
+                }
                 throw(0);
             }
         }
@@ -110,7 +126,6 @@
             ;; Change price
             if (op == op::seller::update_sale) {
                 ;; TODO: add tests
-
                 cell new_price_config = in_msg_body~load_ref();
                 store_data(1,
                         nft_address,
@@ -209,7 +224,9 @@
                 ;; If he don't bought NFT - he will get all jettons back with all TONs
 
                 ;; Buy with TON
-                if (msg_value - price - royalty_fee - market_fee - little_gas_amount <= 0) {
+
+                ;; If price in TON is 0 - then contract is unconfigurated yet (just let this)
+                if ((msg_value - price - royalty_fee - market_fee - little_gas_amount <= 0) | (price == 0)) {
                     send_money_or_jettons_back_body(in_msg_body, message_from, msg_value, fwd_fee, "No funds 🌚");
                 } else {
                     send_message_with_text(marketplace, market_fee, "Market fee, sir 🤌", 1);
@@ -297,7 +314,6 @@
     }
 
     int op = 0;
-
     if (slice_bits(in_msg_body)) {
         op = in_msg_body~load_uint(32);
     }
@@ -308,7 +324,6 @@
             if (op == op::seller::send_nft) { ;; send nft one more time
                 raw_reserve(100000, 0); ;; save little ammount
                 send_nft(nft_address, message_from, -1); ;; transfer nft
-
                 throw(0);
             } else { ;; or process admin stuff
                 int exit_code = process_admin(op, in_msg_body);
@@ -322,7 +337,6 @@
             if (op == op::seller::send_nft) { ;; send nft one more time
                 raw_reserve(100000, 0); ;; save little ammount
                 send_nft(nft_address, message_from, -1); ;; transfer nft
-
                 throw(0);
             } else { ;; or process admin stuff
                 int exit_code = process_admin(op, in_msg_body);
@@ -336,5 +350,5 @@
 }
 
 () recv_external(slice in_msg_body) impure {
-    ;; TODO: allow cancel auction with external message when it's out of time
+    ;; TODO: allow cancel sale with external message when it's out of time
 }
