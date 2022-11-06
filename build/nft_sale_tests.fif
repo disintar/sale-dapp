@@ -63,11 +63,15 @@ PROGRAM{
   DECLPROC snake_equal?
   DECLPROC load_data
   DECLPROC store_data
-  DECLPROC parse_price_config
   DECLPROC parse_sell_config
+  DECLPROC parse_price_config
   DECLPROC send_message
   DECLPROC send_message_with_text
   DECLPROC send_nft
+  DECLPROC send_jettons_with_text
+  DECLPROC send_money_back
+  DECLPROC send_money_or_jettons_back_op
+  DECLPROC send_money_or_jettons_back_body
   82320 DECLMETHOD get_version
   117451 DECLMETHOD get_sell_info
   DECLPROC process_admin
@@ -2072,15 +2076,6 @@ PROGRAM{
     ENDC	//  _15
     c4 POP
   }>
-  parse_price_config PROC:<{
-    //  price_config
-    CTOS	//  price_config_cs
-    1 LDU	//  is_ton price_config_cs
-    LDGRAMS	//  is_ton price price_config_cs
-    LDMSGADDR	//  is_ton price limited_address price_config_cs
-    32 LDU	//  is_ton price limited_address end_time price_config_cs
-    ENDS
-  }>
   parse_sell_config PROC:<{
     //  sell_config
     CTOS	//  sell_config_cs
@@ -2089,6 +2084,16 @@ PROGRAM{
     16 LDU	//  marketplace_numerator marketplace_denominator royalty_numerator sell_config_cs
     16 LDU	//  marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator sell_config_cs
     LDMSGADDR	//  marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation sell_config_cs
+    ENDS
+  }>
+  parse_price_config PROC:<{
+    //  price_config
+    CTOS	//  price_config_cs
+    1 LDU	//  is_ton price_config_cs
+    LDGRAMS	//  is_ton price price_config_cs
+    LDMSGADDR	//  is_ton price limited_address price_config_cs
+    32 LDU	//  is_ton price limited_address end_time price_config_cs
+    LDMSGADDR	//  is_ton price limited_address end_time my_jetton_address price_config_cs
     ENDS
   }>
   send_message PROCINLINE:<{
@@ -2163,6 +2168,107 @@ PROGRAM{
     s0 s3 XCHG2
     s4 s1 s4 XCHG3	//  nft_address forward_amount_real _10=1607220500 _11=0 _13 mode
     send_message INLINECALLDICT
+  }>
+  send_jettons_with_text PROCREF:<{
+    //  src dest forward_ton_amount amount text
+    NEWC
+    ROT	//  src dest forward_ton_amount text transfer_message amount
+    STVARUINT16	//  src dest forward_ton_amount text transfer_message
+    s3 PUSH	//  src dest forward_ton_amount text transfer_message dest
+    STSLICER	//  src dest forward_ton_amount text transfer_message
+    s0 s3 XCHG2	//  src text forward_ton_amount transfer_message dest
+    STSLICER	//  src text forward_ton_amount transfer_message
+    0 PUSHINT	//  src text forward_ton_amount transfer_message _10=0
+    SWAP	//  src text forward_ton_amount _10=0 transfer_message
+    1 STU	//  src text forward_ton_amount transfer_message
+    1 PUSHINT	//  src text forward_ton_amount transfer_message _13=1
+    STGRAMS	//  src text forward_ton_amount transfer_message
+    1 PUSHINT	//  src text forward_ton_amount transfer_message _15=1
+    SWAP	//  src text forward_ton_amount _15=1 transfer_message
+    1 STU	//  src text forward_ton_amount transfer_message
+    0 PUSHINT	//  src text forward_ton_amount transfer_message _18=0
+    NEWC	//  src text forward_ton_amount transfer_message _18=0 _19
+    32 STU	//  src text forward_ton_amount transfer_message _21
+    s0 s3 XCHG2	//  src transfer_message forward_ton_amount _21 text
+    STSLICER	//  src transfer_message forward_ton_amount _22
+    ENDC	//  src transfer_message forward_ton_amount _23
+    ROT	//  src forward_ton_amount _23 transfer_message
+    STREF	//  src forward_ton_amount transfer_message
+    260734629 PUSHINT	//  src forward_ton_amount transfer_message _25=260734629
+    0 PUSHINT
+    ROT
+    1 PUSHINT	//  src forward_ton_amount _25=260734629 _26=0 transfer_message _27=1
+    send_message INLINECALLDICT
+  }>
+  send_money_back PROCREF:<{
+    //  message_from msg_value fwd_fee text
+    s2 s1 XCPU	//  message_from text fwd_fee msg_value fwd_fee
+    SUB	//  message_from text fwd_fee _5
+    50000000 PUSHINT	//  message_from text fwd_fee _5 _6=50000000
+    SUB	//  message_from text fwd_fee new_fwd_amount
+    DUP	//  message_from text fwd_fee new_fwd_amount new_fwd_amount
+    0 GTINT	//  message_from text fwd_fee new_fwd_amount _10
+    57 THROWIFNOT
+    SWAP	//  message_from text new_fwd_amount fwd_fee
+    ADD	//  message_from text _12
+    SWAP
+    2 PUSHINT	//  message_from _12 text _13=2
+    send_message_with_text INLINECALLDICT
+    0 THROW
+  }>
+  send_money_or_jettons_back_op PROCINLINE:<{
+    //  op in_msg_body message_from msg_value fwd_fee text
+    s0 s5 XCHG
+    1935855772 PUSHINT	//  text in_msg_body message_from msg_value fwd_fee op _6=1935855772
+    EQUAL	//  text in_msg_body message_from msg_value fwd_fee _7
+    IF:<{	//  text in_msg_body message_from msg_value fwd_fee
+      TUCK	//  text in_msg_body message_from fwd_fee msg_value fwd_fee
+      SUB	//  text in_msg_body message_from fwd_fee _9
+      50000000 PUSHINT	//  text in_msg_body message_from fwd_fee _9 _10=50000000
+      SUB	//  text in_msg_body message_from fwd_fee new_fwd_amount
+      DUP	//  text in_msg_body message_from fwd_fee new_fwd_amount new_fwd_amount
+      0 GTINT	//  text in_msg_body message_from fwd_fee new_fwd_amount _14
+      57 THROWIFNOT
+      s0 s3 XCHG	//  text new_fwd_amount message_from fwd_fee in_msg_body
+      32 LDU	//  text new_fwd_amount message_from fwd_fee _32 _31
+      NIP	//  text new_fwd_amount message_from fwd_fee in_msg_body
+      LDVARUINT16	//  text new_fwd_amount message_from fwd_fee amount in_msg_body
+      LDMSGADDR	//  text new_fwd_amount message_from fwd_fee amount _36 _35
+      DROP	//  text new_fwd_amount message_from fwd_fee amount sender
+      s4 s2 XCHG2	//  text amount message_from sender new_fwd_amount fwd_fee
+      ADD	//  text amount message_from sender _26
+      s0 s3 s4 XCHG3	//  message_from sender _26 amount text
+      send_jettons_with_text INLINECALLDICT
+      0 THROW
+    }>ELSE<{	//  text in_msg_body message_from msg_value fwd_fee
+      s3 POP	//  text fwd_fee message_from msg_value
+      s0 s0 s3 XCHG3	//  message_from msg_value fwd_fee text
+      send_money_back INLINECALLDICT
+    }>
+  }>
+  send_money_or_jettons_back_body PROCINLINE:<{
+    //  in_msg_body message_from msg_value fwd_fee text
+    0 PUSHINT	//  in_msg_body message_from msg_value fwd_fee text op=0
+    s5 PUSH	//  in_msg_body message_from msg_value fwd_fee text op=0 in_msg_body
+    SBITS	//  in_msg_body message_from msg_value fwd_fee text op=0 _7
+    31 GTINT	//  in_msg_body message_from msg_value fwd_fee text op=0 _9
+    IF:<{	//  in_msg_body message_from msg_value fwd_fee text op=0
+      DROP	//  in_msg_body message_from msg_value fwd_fee text
+      s0 s4 XCHG	//  text message_from msg_value fwd_fee in_msg_body
+      32 LDU	//  text message_from msg_value fwd_fee op in_msg_body
+      s5 s5 XCHG2	//  in_msg_body message_from msg_value fwd_fee text op
+    }>	//  in_msg_body message_from msg_value fwd_fee text op
+    DUP
+    1935855772 PUSHINT	//  in_msg_body message_from msg_value fwd_fee text op op _13=1935855772
+    EQUAL	//  in_msg_body message_from msg_value fwd_fee text op _14
+    IF:<{	//  in_msg_body message_from msg_value fwd_fee text op
+      5 -ROLL	//  op in_msg_body message_from msg_value fwd_fee text
+      send_money_or_jettons_back_op INLINECALLDICT
+    }>ELSE<{	//  in_msg_body message_from msg_value fwd_fee text op
+      DROP
+      1 4 BLKDROP2	//  message_from msg_value fwd_fee text
+      send_money_back INLINECALLDICT
+    }>
   }>
   get_version PROC:<{
     // 
@@ -2243,7 +2349,7 @@ PROGRAM{
       }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config
       s0 s9 XCHG	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config in_msg_body
       32 LDU	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body
-      64 LDU	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op _272 _271
+      64 LDU	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op _339 _338
       NIP	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body
       LDMSGADDR	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op prev_owner_address in_msg_body
       s1 s5 PUSH2	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op prev_owner_address in_msg_body prev_owner_address deployer_address
@@ -2257,13 +2363,11 @@ PROGRAM{
       SWAP	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op prev_owner_address in_msg_body _47 deployer_is_prev_owner
       AND	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op prev_owner_address in_msg_body _48
       IF:<{	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op prev_owner_address in_msg_body
-        s8 POP
-        2DROP
-        s7 POP	//  price_config sell_config message_from in_msg_body mode nft_address deployer_address buyer
-        1 PUSHINT	//  price_config sell_config message_from in_msg_body mode nft_address deployer_address buyer _49=1
-        s3 s2 s(-1) PUXC2
-        s0 s1 s9 PU2XC
-        s1 s10 XCHG	//  buyer deployer_address message_from in_msg_body mode nft_address _49=1 nft_address deployer_address buyer sell_config price_config
+        2 1 BLKDROP2	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config in_msg_body
+        1 PUSHINT	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config in_msg_body _49=1
+        s5 s2 s(-1) PUXC2
+        s5 PUSH
+        s5 s2 s12 PUXC2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _49=1 nft_address deployer_address buyer sell_config price_config
         store_data INLINECALLDICT
         0 THROW
       }>ELSE<{	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op prev_owner_address in_msg_body
@@ -2274,275 +2378,397 @@ PROGRAM{
         EQUAL	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body op _54
         IF:<{	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body op
           DROP	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body
-          s0 s7 XCHG
-          50000000 PUSHINT	//  prev_owner_address in_msg_body message_from fwd_fee mode nft_address deployer_address buyer msg_value _56=50000000
-          SUB	//  prev_owner_address in_msg_body message_from fwd_fee mode nft_address deployer_address buyer _57
-          s5 PUSH	//  prev_owner_address in_msg_body message_from fwd_fee mode nft_address deployer_address buyer _57 fwd_fee
-          SUB	//  prev_owner_address in_msg_body message_from fwd_fee mode nft_address deployer_address buyer new_fwd_amount
-          DUP	//  prev_owner_address in_msg_body message_from fwd_fee mode nft_address deployer_address buyer new_fwd_amount new_fwd_amount
-          0 GTINT	//  prev_owner_address in_msg_body message_from fwd_fee mode nft_address deployer_address buyer new_fwd_amount _61
+          s7 PUSH
+          50000000 PUSHINT	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body msg_value _56=50000000
+          SUB	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body _57
+          s6 PUSH	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body _57 fwd_fee
+          SUB	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body new_fwd_amount
+          DUP	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body new_fwd_amount new_fwd_amount
+          0 GTINT	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body new_fwd_amount _61
           229 THROWIFNOT
-          s0 s5 XCHG2	//  prev_owner_address in_msg_body message_from buyer mode nft_address deployer_address new_fwd_amount fwd_fee
-          ADD	//  prev_owner_address in_msg_body message_from buyer mode nft_address deployer_address _63
-          s5 s7 s7 PUXC2	//  deployer_address in_msg_body message_from buyer mode nft_address message_from prev_owner_address _63
+          s6 PUSH	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body new_fwd_amount fwd_fee
+          ADD	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body _63
+          s7 s9 s9 PUXC2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer message_from prev_owner_address _63
           send_nft INLINECALLDICT
           0 THROW
         }>ELSE<{	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body op
           s9 POP	//  op msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body
-          s0 s8 XCHG
-          1935855772 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op _67=1935855772
-          EQUAL	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _68
-          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer
-            s4 POP
-            s5 POP	//  in_msg_body deployer_address message_from buyer mode nft_address
-            0 THROW
-          }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer
-            s0 s6 XCHG
-            50000000 PUSHINT	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address msg_value _72=50000000
-            SUB	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address _73
-            s4 PUSH	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address _73 fwd_fee
-            SUB	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address new_fwd_amount
-            DUP	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address new_fwd_amount new_fwd_amount
-            0 GTINT	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address new_fwd_amount _77
-            229 THROWIFNOT
-            s0 s4 XCHG2	//  in_msg_body buyer message_from deployer_address mode nft_address new_fwd_amount fwd_fee
-            ADD	//  in_msg_body buyer message_from deployer_address mode nft_address _79
-            s4 s(-1) PUXC
-            x{4572726f72} PUSHSLICE
-            2 PUSHINT	//  in_msg_body buyer message_from deployer_address mode nft_address message_from _79 _80 _81=2
-            send_message_with_text INLINECALLDICT
-            0 THROW
-            s2 s4 XCHG	//  in_msg_body deployer_address message_from buyer mode nft_address
-          }>
-          s4 s5 XCHG	//  deployer_address in_msg_body message_from buyer mode nft_address
+          s8 s8 s6 XCPU2
+          s9 s7 PUSH2
+          x{4572726f7220f09fa582efb88f} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op in_msg_body message_from msg_value fwd_fee _67
+          send_money_or_jettons_back_op INLINECALLDICT
         }>
-        s2 s5 XCHG
-        s2 s4 XCHG	//  buyer deployer_address message_from in_msg_body mode nft_address
       }>
     }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config
       s5 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config mode
-      1 EQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _86
+      1 EQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _70
       IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config
         s7 s3 PUSH2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config message_from deployer_address
-        SDEQ	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _87
+        SDEQ	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _71
         IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config
-          s6 POP
-          s7 POP	//  in_msg_body sell_config message_from price_config mode nft_address deployer_address buyer
-          s0 s7 XCHG	//  buyer sell_config message_from price_config mode nft_address deployer_address in_msg_body
-          32 LDU	//  buyer sell_config message_from price_config mode nft_address deployer_address op in_msg_body
-          OVER	//  buyer sell_config message_from price_config mode nft_address deployer_address op in_msg_body op
-          10 EQINT	//  buyer sell_config message_from price_config mode nft_address deployer_address op in_msg_body _93
-          IF:<{	//  buyer sell_config message_from price_config mode nft_address deployer_address op in_msg_body
+          s0 s9 XCHG	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config in_msg_body
+          32 LDU	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body
+          OVER	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body op
+          10 EQINT	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body _77
+          IF:<{	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body
             NIP
-            s4 POP	//  buyer sell_config message_from in_msg_body mode nft_address deployer_address
-            s0 s3 XCHG	//  buyer sell_config message_from deployer_address mode nft_address in_msg_body
-            LDREF	//  buyer sell_config message_from deployer_address mode nft_address new_price_config in_msg_body
-            1 PUSHINT	//  buyer sell_config message_from deployer_address mode nft_address new_price_config in_msg_body _97=1
-            s3 s2 s(-1) PUXC2
-            s6 PUSH
-            s10 s2 s9 PUXC2
-            SWAP	//  buyer in_msg_body message_from deployer_address mode nft_address _97=1 nft_address deployer_address buyer sell_config new_price_config
+            s9 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config
+            s0 s8 XCHG	//  sell_config msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body
+            LDREF	//  sell_config msg_value message_from fwd_fee mode nft_address deployer_address buyer new_price_config in_msg_body
+            1 PUSHINT	//  sell_config msg_value message_from fwd_fee mode nft_address deployer_address buyer new_price_config in_msg_body _81=1
+            s5 s2 s(-1) PUXC2
+            s5 PUSH
+            s5 s2 s12 PUXC2
+            SWAP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _81=1 nft_address deployer_address buyer sell_config new_price_config
             store_data INLINECALLDICT
             0 THROW
-          }>ELSE<{	//  buyer sell_config message_from price_config mode nft_address deployer_address op in_msg_body
-            SWAP	//  buyer sell_config message_from price_config mode nft_address deployer_address in_msg_body op
-            11 EQINT	//  buyer sell_config message_from price_config mode nft_address deployer_address in_msg_body _102
-            IF:<{	//  buyer sell_config message_from price_config mode nft_address deployer_address in_msg_body
-              3 PUSHINT	//  buyer sell_config message_from price_config mode nft_address deployer_address in_msg_body _103=3
-              s3 s2 s(-1) PUXC2
-              s9 s1 s6 PU2XC
-              s1 s10 XCHG	//  buyer deployer_address message_from in_msg_body mode nft_address _103=3 nft_address deployer_address buyer sell_config price_config
+          }>ELSE<{	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body
+            OVER	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body op
+            11 EQINT	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body _86
+            IF:<{	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body
+              NIP	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config in_msg_body
+              3 PUSHINT	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config in_msg_body _87=3
+              s5 s2 s(-1) PUXC2
+              s5 PUSH
+              s5 s2 s12 PUXC2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _87=3 nft_address deployer_address buyer sell_config price_config
               store_data INLINECALLDICT
-              100000 PUSHINT	//  buyer deployer_address message_from in_msg_body mode nft_address _105=100000
-              0 PUSHINT	//  buyer deployer_address message_from in_msg_body mode nft_address _105=100000 _106=0
+              100000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _89=100000
+              0 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _89=100000 _90=0
               RAWRESERVE
-              s0 s4 PUSH2
-              -1 PUSHINT	//  buyer deployer_address message_from in_msg_body mode nft_address nft_address deployer_address _108=-1
+              s2 s1 PUSH2
+              -1 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer nft_address deployer_address _92=-1
               send_nft INLINECALLDICT
               0 THROW
-            }>ELSE<{	//  buyer sell_config message_from price_config mode nft_address deployer_address in_msg_body
-              s4 POP
-              s5 POP	//  buyer deployer_address message_from in_msg_body mode nft_address
-              179 THROW
+            }>ELSE<{	//  price_config msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config op in_msg_body
+              s10 POP
+              NIP
+              s8 s6 s7 PUSH3
+              s8 PUSH
+              x{4572726f7220f09f8dad} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op in_msg_body message_from msg_value fwd_fee _96
+              send_money_or_jettons_back_op INLINECALLDICT
             }>
-            s2 s4 XCHG	//  buyer in_msg_body message_from deployer_address mode nft_address
           }>
         }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config
-          DUP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price_config
-          parse_price_config CALLDICT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _279 _280 _281 _282
-          DROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address
-          s4 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address sell_config
-          parse_sell_config CALLDICT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation
-          0 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0
-          s0 s6 PUSH2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 royalty_fee=0 limited_address
-          2 PLDU	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 royalty_fee=0 _130
-          NOT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 royalty_fee=0 _131
-          0 EQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price limited_address marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 royalty_fee=0 _133
-          18 s() PUSH
-          s0 s9 XCHG2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price _133 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 royalty_fee=0 message_from limited_address
-          SDEQ	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price _133 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 royalty_fee=0 _134
-          NOT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price _133 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 royalty_fee=0 _135
-          s1 s8 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _133 _135
-          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _136
-          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0
-            17 s() PUSH
-            16 s() PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 msg_value fwd_fee
-            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _138
-            50000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _138 _139=50000000
-            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 new_fwd_amount
-            DUP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 new_fwd_amount new_fwd_amount
-            0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 new_fwd_amount _143
-            229 THROWIFNOT
-            16 s() PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 new_fwd_amount fwd_fee
-            ADD	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _145
-            17 s() PUSH
-            SWAP
-            x{4e6f7420666f7220796f7520f09f8c8a} PUSHSLICE
-            2 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 message_from _145 _146 _147=2
-            send_message_with_text INLINECALLDICT
-          }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0
-          s5 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 marketplace_numerator
-          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _150
-          s5 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _150 marketplace_denominator
-          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _150 _152
-          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0 _153
-          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation market_fee=0
-            DROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation
-            s6 s4 s3 PUXC2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 royalty_destanation royalty_denominator royalty_numerator price marketplace_numerator marketplace_denominator
-            MULDIV	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 royalty_destanation royalty_denominator royalty_numerator _154
-            s5 s(-1) PUXC	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 royalty_destanation royalty_denominator royalty_numerator price _154
-            MIN	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 royalty_destanation royalty_denominator royalty_numerator market_fee
-            s0 s2 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 royalty_destanation market_fee royalty_numerator royalty_denominator
+          OVER	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config sell_config
+          parse_sell_config CALLDICT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation
+          s5 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation price_config
+          parse_price_config CALLDICT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price limited_address end_at my_jetton_address
+          0 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price limited_address end_at my_jetton_address market_fee=0
+          s0 s3 PUSH2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price limited_address end_at my_jetton_address market_fee=0 royalty_fee=0 limited_address
+          2 PLDU	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price limited_address end_at my_jetton_address market_fee=0 royalty_fee=0 _115
+          NOT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price limited_address end_at my_jetton_address market_fee=0 royalty_fee=0 _116
+          0 EQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price limited_address end_at my_jetton_address market_fee=0 royalty_fee=0 _118
+          20 s() PUSH
+          s0 s6 XCHG2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price _118 end_at my_jetton_address market_fee=0 royalty_fee=0 message_from limited_address
+          SDEQ	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price _118 end_at my_jetton_address market_fee=0 royalty_fee=0 _119
+          NOT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price _118 end_at my_jetton_address market_fee=0 royalty_fee=0 _120
+          s1 s5 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0 _118 _120
+          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0 _121
+          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0
+            20 s() PUSH
+            19 s() PUSH
+            21 s() PUSH
+            20 s() PUSH
+            x{4e6f7420666f7220796f7520e29da4efb88f} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0 in_msg_body message_from msg_value fwd_fee _122
+            send_money_or_jettons_back_body INLINECALLDICT
+          }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0
+          s2 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0 end_at
+          0 NEQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0 _125
+          NOW	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 end_at my_jetton_address market_fee=0 _125 _126
+          s0 s4 XCHG2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 _125 my_jetton_address market_fee=0 _126 end_at
+          GEQ	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 _125 my_jetton_address market_fee=0 _127
+          s1 s3 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _125 _127
+          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _128
+          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address
+            3 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _129=3
+            s15 s14 s13 PUSH3
+            s15 s14 PUSH2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _129=3 nft_address deployer_address buyer sell_config price_config
+            store_data INLINECALLDICT
+            18 s() PUSH
+            17 s() PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address msg_value fwd_fee
+            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _132
+            50000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _132 _133=50000000
+            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address new_fwd_amount
+            0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _136
+            IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address
+              19 s() PUSH
+              18 s() PUSH
+              20 s() PUSH
+              19 s() PUSH
+              x{4f7574206f662074696d6520e28fb0} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address in_msg_body message_from msg_value fwd_fee _137
+              send_money_or_jettons_back_body INLINECALLDICT
+            }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address
+            100000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _139=100000
+            s2 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _139=100000 _140=0
+            RAWRESERVE
+            s14 s13 PUSH2
+            -1 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address nft_address deployer_address _142=-1
+            send_nft INLINECALLDICT
+            0 THROW
+          }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address
+          s14 PUSH
+          18 s() PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address nft_address message_from
+          REWRITESTDADDR DROP SWAP REWRITESTDADDR DROP EQUAL	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _146
+          NOT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _147
+          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address
+            19 s() PUSH
+            18 s() PUSH
+            20 s() PUSH
+            19 s() PUSH
+            x{4e6f742073616d6520574320f09f8cadefb88f} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address in_msg_body message_from msg_value fwd_fee _148
+            send_money_or_jettons_back_body INLINECALLDICT
+          }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address
+          s9 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address marketplace_numerator
+          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _151
+          s9 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _151 marketplace_denominator
+          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _151 _153
+          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _154
+          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address
+            NIP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 my_jetton_address
+            s2 s8 s7 PUXC2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config my_jetton_address royalty_fee=0 royalty_numerator royalty_denominator royalty_destanation is_ton price price marketplace_numerator marketplace_denominator
+            MULDIV	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config my_jetton_address royalty_fee=0 royalty_numerator royalty_denominator royalty_destanation is_ton price _155
+            s1 s(-1) PUXC	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config my_jetton_address royalty_fee=0 royalty_numerator royalty_denominator royalty_destanation is_ton price price _155
+            MIN	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config my_jetton_address royalty_fee=0 royalty_numerator royalty_denominator royalty_destanation is_ton price market_fee
+            s0 s7 XCHG
+            s0 s6 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0
+          }>ELSE<{
+            s8 POP
+            s8 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0
+          }>
+          s1 s7 XCPU	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price market_fee
+          SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price
+          s5 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price royalty_numerator
+          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price _159
+          s5 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price _159 royalty_denominator
+          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price _159 _161
+          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price _162
+          OVER	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price _162 price
+          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price _162 _164
+          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price _165
+          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton royalty_fee=0 price
+            NIP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_numerator royalty_denominator royalty_destanation is_ton price
+            s0 s1 s3 XCPUXC
+            s1 s5 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address price is_ton royalty_destanation price royalty_numerator royalty_denominator
+            MULDIV	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address price is_ton royalty_destanation _166
+            s3 s(-1) PUXC	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address price is_ton royalty_destanation price _166
+            MIN	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address price is_ton royalty_destanation royalty_fee
+            s3 s1 s3 XCHG3	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation is_ton
           }>ELSE<{
             s4 POP
-            s4 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee=0 royalty_destanation market_fee royalty_numerator royalty_denominator
+            s4 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation is_ton
           }>
-          s5 s2 XCPU	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price market_fee
-          SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price
-          OVER	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price royalty_numerator
-          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price _158
-          s6 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price _158 royalty_denominator
-          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price _158 _160
-          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price _161
-          OVER	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price _161 price
-          0 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price _161 _163
-          AND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price _164
-          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator royalty_fee=0 royalty_destanation market_fee royalty_numerator price
-            s4 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton royalty_denominator price royalty_destanation market_fee royalty_numerator
-            s3 s0 s4 PUXC2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton market_fee price royalty_destanation price royalty_numerator royalty_denominator
-            MULDIV	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton market_fee price royalty_destanation _165
-            s2 s(-1) PUXC	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton market_fee price royalty_destanation price _165
-            MIN	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton market_fee price royalty_destanation royalty_fee
-            s0 s1 s3 XCHG3	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee royalty_destanation market_fee
-          }>ELSE<{
-            s5 POP
-            DROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton price royalty_fee royalty_destanation market_fee
-          }>
-          s3 s2 XCPU	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton market_fee royalty_fee royalty_destanation price royalty_fee
-          SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config is_ton market_fee royalty_fee royalty_destanation price
-          s0 s4 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation is_ton
-          1 EQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _169
-          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation
-            s12 s3 PUSH2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation msg_value price
-            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _170
-            s2 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _170 royalty_fee
-            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _171
-            s3 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _171 market_fee
-            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _172
-            50000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _172 _173=50000000
-            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _174
-            1 LESSINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation _176
-            IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation
+          s2 s3 XCPU	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee is_ton royalty_destanation price royalty_fee
+          SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee is_ton royalty_destanation price
+          s0 s2 XCHG	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation is_ton
+          1 EQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation _170
+          IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation
+            s3 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price
+            s12 s0 PUSH2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price msg_value price
+            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _171
+            s2 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _171 royalty_fee
+            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _172
+            s4 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _172 market_fee
+            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _173
+            50000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _173 _174=50000000
+            SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _175
+            1 LESSINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _177
+            IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price
               6 BLKDROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer
-              s6 s4 XCPU	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address msg_value fwd_fee
-              SUB	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address _178
-              50000000 PUSHINT	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address _178 _179=50000000
-              SUB	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address new_fwd_amount
-              DUP	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address new_fwd_amount new_fwd_amount
-              0 GTINT	//  in_msg_body buyer message_from fwd_fee mode nft_address deployer_address new_fwd_amount _183
-              229 THROWIFNOT
-              s0 s4 XCHG2	//  in_msg_body buyer message_from deployer_address mode nft_address new_fwd_amount fwd_fee
-              ADD	//  in_msg_body buyer message_from deployer_address mode nft_address _185
-              s4 s(-1) PUXC
-              x{4e6f2066756e647320f09f8c9a} PUSHSLICE
-              2 PUSHINT	//  in_msg_body buyer message_from deployer_address mode nft_address message_from _185 _186 _187=2
-              send_message_with_text INLINECALLDICT
-            }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation
-              s10 POP
-              s11 POP	//  in_msg_body royalty_fee message_from royalty_destanation mode nft_address deployer_address buyer sell_config price_config price market_fee
-              x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  in_msg_body royalty_fee message_from royalty_destanation mode nft_address deployer_address buyer sell_config price_config price market_fee _189
-              SWAP
+              s7 s5 s6 PUSH3
+              s7 PUSH
+              x{4e6f2066756e647320f09f8c9a} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body message_from msg_value fwd_fee _178
+              send_money_or_jettons_back_body INLINECALLDICT
+            }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price
+              x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _180
+              s0 s4 XCHG2
               x{4d61726b6574206665652c2073697220f09fa48c} PUSHSLICE
-              1 PUSHINT	//  in_msg_body royalty_fee message_from royalty_destanation mode nft_address deployer_address buyer sell_config price_config price _189 market_fee _190 _191=1
+              1 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price royalty_destanation royalty_fee _180 market_fee _181 _182=1
               send_message_with_text INLINECALLDICT
-              s7 s9 XCHG2
-              x{4865792c20796f757220726f79616c74792c2073697220f09fa48c} PUSHSLICE
-              1 PUSHINT	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config royalty_destanation royalty_fee _193 _194=1
+              x{4865792c20796f757220726f79616c74792c2073697220f09fa48c} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price royalty_destanation royalty_fee _184
+              1 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price royalty_destanation royalty_fee _184 _185=1
               send_message_with_text INLINECALLDICT
-              x{f09fa4ad} PUSHSLICE	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config _198
-              x{f09f98b1} PUSHSLICE	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config _198 _199
-              x{f09fa5b3} PUSHSLICE	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config _198 _199 _200
-              x{f09f9180} PUSHSLICE	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config _198 _199 _200 _201
-              x{f09fabb6} PUSHSLICE	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config _198 _199 _200 _201 _202
-              5 TUPLE	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config wow
-              5 PUSHINT	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config wow _205=5
-              RAND	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config wow wow_num
-              INDEXVAR	//  in_msg_body price message_from price_config mode nft_address deployer_address buyer sell_config _207
-              s3 s8 s8 PUXC2
-              1 PUSHINT	//  in_msg_body sell_config message_from price_config mode nft_address deployer_address buyer deployer_address price _207 _208=1
+              x{f09fa4ad} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price _189
+              x{f09f98b1} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price _189 _190
+              x{f09fa5b3} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price _189 _190 _191
+              x{f09f9180} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price _189 _190 _191 _192
+              x{f09fabb6} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price _189 _190 _191 _192 _193
+              5 TUPLE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price wow
+              5 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price wow _196=5
+              RAND	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price wow wow_num
+              INDEXVAR	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price _198
+              s5 PUSH
+              -ROT
+              1 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config deployer_address price _198 _199=1
               send_message_with_text INLINECALLDICT
-              100000 PUSHINT	//  in_msg_body sell_config message_from price_config mode nft_address deployer_address buyer _210=100000
-              0 PUSHINT	//  in_msg_body sell_config message_from price_config mode nft_address deployer_address buyer _210=100000 _211=0
+              100000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _201=100000
+              0 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _201=100000 _202=0
               RAWRESERVE
-              s2 s5 PUSH2
-              -1 PUSHINT	//  in_msg_body sell_config message_from price_config mode nft_address deployer_address buyer nft_address message_from _213=-1
+              s4 s7 PUSH2
+              -1 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config nft_address message_from _204=-1
               send_nft INLINECALLDICT
-              2 PUSHINT	//  in_msg_body sell_config message_from price_config mode nft_address deployer_address buyer _215=2
-              s3 s2 s(-1) PUXC2
-              s7 s1 s6 PU2XC
-              s1 s10 XCHG	//  in_msg_body deployer_address message_from buyer mode nft_address _215=2 nft_address deployer_address message_from sell_config price_config
+              2 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config _206=2
+              s5 s2 s(-1) PUXC2
+              s5 PUSH
+              s10 s2 s(-1) PUXC2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _206=2 nft_address deployer_address message_from sell_config price_config
               store_data INLINECALLDICT
-              s2 s4 XCHG	//  in_msg_body buyer message_from deployer_address mode nft_address
             }>
             0 THROW
-          }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config price market_fee royalty_fee royalty_destanation
-            6 BLKDROP
-            s4 POP
-            s5 POP	//  in_msg_body deployer_address message_from buyer mode nft_address
-            0 THROW
-            s2 s4 XCHG	//  in_msg_body buyer message_from deployer_address mode nft_address
+          }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation
+            0 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op=0
+            s15 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op=0 in_msg_body
+            SBITS	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op=0 _212
+            31 GTINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op=0 _214
+            IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op=0
+              DROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation
+              s0 s14 XCHG	//  royalty_destanation msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price in_msg_body
+              32 LDU	//  royalty_destanation msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price op in_msg_body
+              s15 s15 XCHG2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op
+            }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op
+            DUP
+            1935855772 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op op _218=1935855772
+            EQUAL	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op _219
+            IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op
+              s13 s4 PUXC	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee op royalty_fee price royalty_destanation message_from my_jetton_address
+              SDEQ	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee op royalty_fee price royalty_destanation _220
+              IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee op royalty_fee price royalty_destanation
+                s3 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price
+                s0 s13 XCHG	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee in_msg_body
+                64 LDU	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee _359 _358
+                NIP	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee in_msg_body
+                LDVARUINT16	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount in_msg_body
+                LDMSGADDR	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body
+                s12 PUSH	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body fwd_fee
+                2 LSHIFT#	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body nalogi
+                s15 s(-1) PUXC	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body msg_value nalogi
+                SUB	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body _235
+                50000000 PUSHINT	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body _235 _236=50000000
+                SUB	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount
+                DUP	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount new_fwd_amount
+                0 GTINT	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount _240
+                57 THROWIFNOT
+                s3 PUSH
+                17 s() PUSH	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount amount price
+                SUB	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount _243
+                s5 PUSH	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount _243 royalty_fee
+                SUB	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount _244
+                s7 PUSH	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount _244 market_fee
+                SUB	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount change
+                DUP	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount change change
+                0 LESSINT	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount change _247
+                IF:<{	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount change
+                  DROP
+                  4 4 BLKDROP2
+                  s4 POP
+                  s11 POP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer new_fwd_amount amount sender
+                  s2 s7 XCPU	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sender amount new_fwd_amount fwd_fee
+                  ADD	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sender amount _248
+                  s8 PUSH
+                  s3 s1 s3 XCHG3
+                  x{4e6f7420656e6f75676874206a6574746f6e7320f09f8c9a} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer message_from sender _248 amount _249
+                  send_jettons_with_text INLINECALLDICT
+                }>ELSE<{	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount change
+                  NIP
+                  s3 POP	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee change sender in_msg_body
+                  x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee change sender in_msg_body _251
+                  x{4d61726b65742066656520f09f92ab} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee change sender in_msg_body _251 _252
+                  s15 PUSH
+                  s15 s3 s(-1) PUXC2
+                  s1 s9 XCHG	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body royalty_destanation royalty_fee change sender message_from _251 fwd_fee market_fee _252
+                  send_jettons_with_text INLINECALLDICT
+                  x{596f757220726f79616c747920f09f8d81} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body royalty_destanation royalty_fee change sender _254
+                  s13 PUSH
+                  s5 s1 s3 XCHG3
+                  s13 s4 s(-1) PUXC2	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change message_from royalty_destanation fwd_fee royalty_fee _254
+                  send_jettons_with_text INLINECALLDICT
+                  x{e29aa1efb88f} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change _258
+                  x{f09faa90} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change _258 _259
+                  x{f09f92a5} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change _258 _259 _260
+                  x{f09f8c88} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change _258 _259 _260 _261
+                  x{f09f8caa} PUSHSLICE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change _258 _259 _260 _261 _262
+                  5 TUPLE	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change wow
+                  5 PUSHINT	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change wow _265=5
+                  RAND	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change wow wow_num
+                  INDEXVAR	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change _267
+                  s11 PUSH
+                  s8 s2 s(-1) PUXC2
+                  s12 PUSH
+                  s0 s2 XCHG
+                  s0 16 s() XCHG
+                  SWAP	//  change msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender message_from deployer_address fwd_fee price _267
+                  send_jettons_with_text INLINECALLDICT
+                  s11 PUSH	//  change msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender change
+                  0 GTINT	//  change msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender _270
+                  IF:<{	//  change msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body sender
+                    s9 s(-1) s(-1) PUXCPU
+                    s10 s13 PUXC
+                    x{596f7572206368616e67652073697220f09f98bc} PUSHSLICE	//  sender msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body message_from sender fwd_fee change _271
+                    send_jettons_with_text INLINECALLDICT
+                  }>ELSE<{
+                    s11 POP	//  sender msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body
+                  }>
+                  100000 PUSHINT	//  sender msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body _273=100000
+                  0 PUSHINT	//  sender msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body _273=100000 _274=0
+                  RAWRESERVE
+                  s5 s10 PUSH2
+                  -1 PUSHINT	//  sender msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body nft_address sender _276=-1
+                  send_nft INLINECALLDICT
+                  2 PUSHINT	//  sender msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config in_msg_body _278=2
+                  s3 s6 XCPU
+                  s3 s6 XCPU
+                  s0 s3 XCHG
+                  s13 s13 s13 XCHG3	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer _278=2 nft_address deployer_address sender sell_config price_config
+                  store_data INLINECALLDICT
+                  0 THROW
+                }>
+              }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee op royalty_fee price royalty_destanation
+                s3 s6 XCHG
+                6 BLKDROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op
+                s8 s6 s7 PUSH3
+                s8 PUSH
+                x{4e6f74206f7572206a6574746f6e20f09f8d84} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op in_msg_body message_from msg_value fwd_fee _282
+                send_money_or_jettons_back_op INLINECALLDICT
+              }>
+            }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee my_jetton_address royalty_fee price royalty_destanation op
+              8 BLKDROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer
+              s5 s6 s4 PUSH3
+              x{4e6f74206a6574746f6e7320f09f9984} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer message_from msg_value fwd_fee _284
+              send_money_back INLINECALLDICT
+            }>
           }>
-          s4 s5 XCHG	//  buyer in_msg_body message_from deployer_address mode nft_address
         }>
-        s4 s5 XCHG
-        s2 s4 XCHG	//  in_msg_body deployer_address message_from buyer mode nft_address
       }>ELSE<{
-        2DROP
-        s4 POP
-        s5 POP	//  in_msg_body deployer_address message_from buyer mode nft_address
+        2DROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer
       }>
-      s2 s5 XCHG	//  buyer deployer_address message_from in_msg_body mode nft_address
     }>
-    s0 s2 XCHG	//  buyer deployer_address message_from nft_address mode in_msg_body
-    32 LDU	//  buyer deployer_address message_from nft_address mode op in_msg_body
-    s2 PUSH	//  buyer deployer_address message_from nft_address mode op in_msg_body mode
-    2 EQINT	//  buyer deployer_address message_from nft_address mode op in_msg_body _226
-    IF:<{	//  buyer deployer_address message_from nft_address mode op in_msg_body
+    0 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op=0
+    s8 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op=0 in_msg_body
+    SBITS	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op=0 _288
+    IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op=0
+      DROP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer
+      s0 s7 XCHG	//  buyer msg_value message_from fwd_fee mode nft_address deployer_address in_msg_body
+      32 LDU	//  buyer msg_value message_from fwd_fee mode nft_address deployer_address op in_msg_body
+      s8 s8 XCHG2	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op
+    }>	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op
+    s4 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op mode
+    2 EQINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op _293
+    IF:<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op
       s2 POP
-      s4 POP	//  buyer op message_from nft_address in_msg_body
-      s2 s4 PUXC	//  in_msg_body op message_from nft_address message_from buyer
-      SDEQ	//  in_msg_body op message_from nft_address _227
-      IF:<{	//  in_msg_body op message_from nft_address
+      s3 POP	//  in_msg_body msg_value message_from fwd_fee buyer nft_address op
+      s4 s2 PUXC	//  in_msg_body msg_value message_from fwd_fee op nft_address message_from buyer
+      SDEQ	//  in_msg_body msg_value message_from fwd_fee op nft_address _294
+      IF:<{	//  in_msg_body msg_value message_from fwd_fee op nft_address
+        s2 POP
+        s3 POP	//  in_msg_body op message_from nft_address
         s2 PUSH
-        160 PUSHINT	//  in_msg_body op message_from nft_address op _228=160
-        EQUAL	//  in_msg_body op message_from nft_address _229
+        160 PUSHINT	//  in_msg_body op message_from nft_address op _295=160
+        EQUAL	//  in_msg_body op message_from nft_address _296
         IF:<{	//  in_msg_body op message_from nft_address
           2 2 BLKDROP2	//  message_from nft_address
-          100000 PUSHINT	//  message_from nft_address _230=100000
-          0 PUSHINT	//  message_from nft_address _230=100000 _231=0
+          100000 PUSHINT	//  message_from nft_address _297=100000
+          0 PUSHINT	//  message_from nft_address _297=100000 _298=0
           RAWRESERVE
           SWAP
-          -1 PUSHINT	//  nft_address message_from _233=-1
+          -1 PUSHINT	//  nft_address message_from _300=-1
           send_nft INLINECALLDICT
           0 THROW
         }>ELSE<{	//  in_msg_body op message_from nft_address
@@ -2551,28 +2777,33 @@ PROGRAM{
           process_admin INLINECALLDICT	//  exit_code
           THROWANY
         }>
-      }>ELSE<{	//  in_msg_body op message_from nft_address
-        4 BLKDROP	// 
-        179 THROW
+      }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee op nft_address
+        DROP	//  in_msg_body msg_value message_from fwd_fee op
+        s0 s4 XCHG
+        s3 s3 XCHG2
+        x{4572726f7220f09f9290} PUSHSLICE	//  op in_msg_body message_from msg_value fwd_fee _307
+        send_money_or_jettons_back_op INLINECALLDICT
       }>
-    }>ELSE<{	//  buyer deployer_address message_from nft_address mode op in_msg_body
-      s6 POP	//  in_msg_body deployer_address message_from nft_address mode op
-      SWAP	//  in_msg_body deployer_address message_from nft_address op mode
-      3 EQINT	//  in_msg_body deployer_address message_from nft_address op _243
-      IF:<{	//  in_msg_body deployer_address message_from nft_address op
-        s2 s3 PUXC	//  in_msg_body op message_from nft_address message_from deployer_address
-        SDEQ	//  in_msg_body op message_from nft_address _244
-        IF:<{	//  in_msg_body op message_from nft_address
+    }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer op
+      NIP	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address op
+      s0 s3 XCHG	//  in_msg_body msg_value message_from fwd_fee op nft_address deployer_address mode
+      3 EQINT	//  in_msg_body msg_value message_from fwd_fee op nft_address deployer_address _310
+      IF:<{	//  in_msg_body msg_value message_from fwd_fee op nft_address deployer_address
+        s4 s(-1) PUXC	//  in_msg_body msg_value message_from fwd_fee op nft_address message_from deployer_address
+        SDEQ	//  in_msg_body msg_value message_from fwd_fee op nft_address _311
+        IF:<{	//  in_msg_body msg_value message_from fwd_fee op nft_address
+          s2 POP
+          s3 POP	//  in_msg_body op message_from nft_address
           s2 PUSH
-          160 PUSHINT	//  in_msg_body op message_from nft_address op _245=160
-          EQUAL	//  in_msg_body op message_from nft_address _246
+          160 PUSHINT	//  in_msg_body op message_from nft_address op _312=160
+          EQUAL	//  in_msg_body op message_from nft_address _313
           IF:<{	//  in_msg_body op message_from nft_address
             2 2 BLKDROP2	//  message_from nft_address
-            100000 PUSHINT	//  message_from nft_address _247=100000
-            0 PUSHINT	//  message_from nft_address _247=100000 _248=0
+            100000 PUSHINT	//  message_from nft_address _314=100000
+            0 PUSHINT	//  message_from nft_address _314=100000 _315=0
             RAWRESERVE
             SWAP
-            -1 PUSHINT	//  nft_address message_from _250=-1
+            -1 PUSHINT	//  nft_address message_from _317=-1
             send_nft INLINECALLDICT
             0 THROW
           }>ELSE<{	//  in_msg_body op message_from nft_address
@@ -2581,12 +2812,15 @@ PROGRAM{
             process_admin INLINECALLDICT	//  exit_code
             THROWANY
           }>
-        }>ELSE<{	//  in_msg_body op message_from nft_address
-          4 BLKDROP	// 
-          179 THROW
+        }>ELSE<{	//  in_msg_body msg_value message_from fwd_fee op nft_address
+          DROP	//  in_msg_body msg_value message_from fwd_fee op
+          s0 s4 XCHG
+          s3 s3 XCHG2
+          x{4572726f7220f09f8c8d} PUSHSLICE	//  op in_msg_body message_from msg_value fwd_fee _324
+          send_money_or_jettons_back_op INLINECALLDICT
         }>
       }>ELSE<{
-        5 BLKDROP	// 
+        7 BLKDROP	// 
       }>
     }>
   }>
@@ -2656,10 +2890,13 @@ PROGRAM{
     0 PUSHINT	//  main_data price_config _46=0
     SWAP	//  main_data _46=0 price_config
     32 STU	//  main_data price_config
+    0 PUSHINT	//  main_data price_config _49=0
+    SWAP	//  main_data _49=0 price_config
+    2 STU	//  main_data price_config
     ENDC	//  main_data price_config_cell
     SWAP	//  price_config_cell main_data
     STREF	//  main_data
-    ENDC	//  _52
+    ENDC	//  _55
     c4 POP
   }>
   __test_get_init_mode PROC:<{
@@ -2964,10 +3201,13 @@ PROGRAM{
     0 PUSHINT	//  main_data price_config _43=0
     SWAP	//  main_data _43=0 price_config
     32 STU	//  main_data price_config
+    0 PUSHINT	//  main_data price_config _46=0
+    SWAP	//  main_data _46=0 price_config
+    2 STU	//  main_data price_config
     ENDC	//  main_data price_config_cell
     SWAP	//  price_config_cell main_data
     STREF	//  main_data
-    ENDC	//  _49
+    ENDC	//  _52
     c4 POP
   }>
   __test_try_to_buy PROC:<{

@@ -8,10 +8,18 @@
 "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant deployer_address
 "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"  $>trySmca 2constant royalty_address
 
+// Main cell:
 // 1023bits
 // 8 mode
 // 32 mode
-// 267 addr * 3 = 801
+// 267 addr * 3 = 801 bits
+
+// Sell config
+// 16 * 4 = 64
+// 267 addr = 331 bits
+
+// Price config
+// 1 + 16 + 2 + 32 + 267 = 318 bits
 
 <b
    0 8 u, // mode
@@ -33,5 +41,7 @@
        1000000000 Gram, // price value
        0 2 u, // If sale is only for one user - you need to define it here
        0 32 u, // If sale is limited in time - define end time here
+
+       0 2 u, // If jetton sale - wallet of jetton of this sale contract
    b> ref, // price & value config
 b>

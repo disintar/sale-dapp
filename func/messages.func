@@ -57,7 +57,32 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
             mode); ;; send mode
 }
 
-() send_money_back(int msg_value, int fwd_fee, slice text) impure inline_ref {
+
+() send_jettons_with_text(slice src, slice dest, int forward_ton_amount, int amount, slice text) impure inline_ref {
+    ;;     transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
+    ;;                  response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+    ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+    ;;                  = InternalMsgBody;
+
+    ;; TODO: test this is actually will work
+    builder transfer_message = begin_cell();
+    transfer_message = store_coins(transfer_message, amount);
+    transfer_message = store_slice(transfer_message, dest);
+    transfer_message = store_slice(transfer_message, dest);
+    transfer_message = store_uint(transfer_message, 0, 1);
+    transfer_message = store_grams(transfer_message, 1);
+    transfer_message = store_uint(transfer_message, 1, 1);
+    transfer_message = store_ref(transfer_message, begin_cell().store_uint(0, 32).store_slice(text).end_cell());
+
+    send_message(src, ;; to_address
+            forward_ton_amount, ;; forward_amount
+            op::ft::transfer, ;; op code
+            0, ;; query id
+            transfer_message, ;; payload
+            1); ;; send mode
+}
+
+() send_money_back(slice message_from, int msg_value, int fwd_fee, slice text) impure inline_ref {
     ;; Send money back
     int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
     throw_unless(57, new_fwd_amount > 0);
@@ -65,23 +90,38 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
     throw(0);
 }
 
-() send_money_or_jettons_back_op(int op, int msg_value, int fwd_fee, slice text) impure inline {
+() send_money_or_jettons_back_op(int op, slice in_msg_body, slice message_from, int msg_value, int fwd_fee, slice text) impure inline {
     if (op == op::ft::transfer_notification) {
         ;; TODO: send jettons back
+
+        ;; Ensure that there is enought value for code execution and forward message back
+        int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
+        throw_unless(57, new_fwd_amount > 0);
+
+        ;;         transfer_notification#7362d09c query_id:uint64 amount:(VarUInteger 16)
+        ;;                               sender:MsgAddress forward_payload:(Either Cell ^Cell)
+        ;;                               = InternalMsgBody;
+
+        int query_id = in_msg_body~load_uint(32);
+        int amount = in_msg_body~load_coins();
+        slice sender = in_msg_body~load_msg_addr();
+
+        send_jettons_with_text(message_from, sender, new_fwd_amount + fwd_fee, amount, text);
+        throw(0);
     } else {
-        send_money_back(msg_value, fwd_fee, text);
+        send_money_back(message_from, msg_value, fwd_fee, text);
     }
 }
 
-() send_money_or_jettons_back_body(slice in_msg_body, int msg_value, int fwd_fee, slice text) impure inline {
+() send_money_or_jettons_back_body(slice in_msg_body, slice message_from, int msg_value, int fwd_fee, slice text) impure inline {
     int op = 0;
     if (slice_bits(in_msg_body) >= 32) {
-        op = in_msg_body.load_uint(32);
+        op = in_msg_body~load_uint(32);
     }
 
     if (op == op::ft::transfer_notification) {
-        ;; TODO: send jettons back
+        send_money_or_jettons_back_op(op, in_msg_body, message_from, msg_value, fwd_fee, text);
     } else {
-        send_money_back(msg_value, fwd_fee, text);
+        send_money_back(message_from, msg_value, fwd_fee, text);
     }
 }

@@ -46,18 +46,6 @@
     set_data(b.end_cell());
 }
 
-
-(int, int, slice, int) parse_price_config(cell price_config){
-    slice price_config_cs = price_config.begin_parse();
-    int is_ton = price_config_cs~load_uint(1);
-    int price = price_config_cs~load_grams();
-    slice limited_address = price_config_cs~load_msg_addr();
-    int end_time = price_config_cs~load_uint(32);
-    price_config_cs.end_parse();
-
-    return (is_ton, price, limited_address, end_time);
-}
-
 (int, int, int, int, slice) parse_sell_config(cell sell_config){
     slice sell_config_cs = sell_config.begin_parse();
 
@@ -75,4 +63,17 @@
             royalty_numerator,
             royalty_denominator,
             royalty_destanation);
+}
+
+(int, int, slice, int, slice) parse_price_config(cell price_config){
+    slice price_config_cs = price_config.begin_parse();
+    int is_ton = price_config_cs~load_uint(1);
+    int price = price_config_cs~load_grams();
+    slice limited_address = price_config_cs~load_msg_addr();
+    int end_time = price_config_cs~load_uint(32);
+    slice my_jetton_address = price_config_cs~load_msg_addr();
+
+    price_config_cs.end_parse();
+
+    return (is_ton, price, limited_address, end_time, my_jetton_address);
 }
