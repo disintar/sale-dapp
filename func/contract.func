@@ -28,6 +28,7 @@
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
     (slice message_from, int fwd_fee) = parse_in_msg(in_msg_full);
 
+    ;; TODO: Allow multiple assets
     ;; handle internal messages
     (int mode,
             slice nft_address,
@@ -127,10 +128,16 @@
                         sell_config,
                         new_price_config);
                 throw(0);
-            } else { ;; or process admin stuff
-                int exit_code = process_admin(op, in_msg_body);
-                throw(exit_code);
             }
+
+            ;; Here we can allow admin commands
+            ;; Because seller can transfer NFT back
+            ;; Need to think of limitations on sending transfer messages to assets inside contract
+            throw(179);
+            ;;             else { ;; or process admin stuff
+            ;;                 int exit_code = process_admin(op, in_msg_body);
+            ;;                 throw(exit_code);
+            ;;             }
         } else {
             ;; Try to buy
             (int is_ton, int price) = parse_price_config(price_config);
@@ -195,22 +202,30 @@
     if (mode == 2) { ;; NFT was bought
         if (equal_slices(message_from, buyer)) {
             if (op == op::seller::send_nft) { ;; send nft one more time
-                ;; TODO: send nft
+                raw_reserve(100000, 0); ;; save little ammount
+                send_nft(nft_address, message_from, -1); ;; transfer nft
+
                 throw(0);
             } else { ;; or process admin stuff
                 int exit_code = process_admin(op, in_msg_body);
                 throw(exit_code);
             }
+        } else {
+            throw(179);
         }
     } elseif (mode == 3) { ;; Seller was canceled
         if (equal_slices(message_from, deployer_address)) {
             if (op == op::seller::send_nft) { ;; send nft one more time
-                ;; TODO: send nft
+                raw_reserve(100000, 0); ;; save little ammount
+                send_nft(nft_address, message_from, -1); ;; transfer nft
+
                 throw(0);
             } else { ;; or process admin stuff
                 int exit_code = process_admin(op, in_msg_body);
                 throw(exit_code);
             }
+        }else {
+            throw(179);
         }
     }
 
