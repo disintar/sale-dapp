@@ -56,3 +56,32 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
             begin_cell().store_slice(new_owner_address), ;; payload
             mode); ;; send mode
 }
+
+() send_money_back(int msg_value, int fwd_fee, slice text) impure inline_ref {
+    ;; Send money back
+    int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
+    throw_unless(57, new_fwd_amount > 0);
+    send_message_with_text(message_from, new_fwd_amount + fwd_fee, text, 2);
+    throw(0);
+}
+
+() send_money_or_jettons_back_op(int op, int msg_value, int fwd_fee, slice text) impure inline {
+    if (op == op::ft::transfer_notification) {
+        ;; TODO: send jettons back
+    } else {
+        send_money_back(msg_value, fwd_fee, text);
+    }
+}
+
+() send_money_or_jettons_back_body(slice in_msg_body, int msg_value, int fwd_fee, slice text) impure inline {
+    int op = 0;
+    if (slice_bits(in_msg_body) >= 32) {
+        op = in_msg_body.load_uint(32);
+    }
+
+    if (op == op::ft::transfer_notification) {
+        ;; TODO: send jettons back
+    } else {
+        send_money_back(msg_value, fwd_fee, text);
+    }
+}

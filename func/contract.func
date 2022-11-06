@@ -97,17 +97,8 @@
 
             send_nft(message_from, prev_owner_address, new_fwd_amount + fwd_fee);
             throw(0);
-        } elseif (op == op::ft::transfer_notification) {
-            ;; We got Jettons, but current mode is not inited, so just send them back
-            ;; TODO: bounce Jettons
-            throw(0);
         } else {
-            int new_fwd_amount = msg_value - little_gas_amount - fwd_fee;
-            throw_unless(229, new_fwd_amount > 0);
-
-            ;; We got some strange stuff, try to send it back, or throw error
-            send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Error", 2);
-            throw(0);
+            send_money_or_jettons_back_op(op, msg_value, fwd_fee, "Error 🥂️");
         }
     } elseif (mode == 1) { ;; Seller is inited
         ;; Change settings & admin control
@@ -141,7 +132,7 @@
                 send_nft(nft_address, deployer_address, -1); ;; transfer nft back to owner
                 throw(0);
             } else {
-                throw(179);
+                send_money_or_jettons_back_op(op, msg_value, fwd_fee, "Error 🍭");
             }
 
             ;; Here we can't allow admin commands
@@ -151,7 +142,7 @@
             ;;                 int exit_code = process_admin(op, in_msg_body);
             ;;                 throw(exit_code);
             ;;             }
-        } else {
+        }  else {
             ;; Try to buy
             (int is_ton, int price, slice limited_address, int end_at) = parse_price_config(price_config);
             (int marketplace_numerator,
@@ -164,15 +155,11 @@
 
             ;; TODO: test those limits
             if ((~ preload_uint(limited_address, 2) == 0) & (~ equal_slices(message_from, limited_address))) {
-                ;; Send money back
-                int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
-                throw_unless(229, new_fwd_amount > 0);
-                send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Not for you 🌊", 2);
-                throw(0);
+                send_money_or_jettons_back_body(in_msg_body, msg_value, fwd_fee, "Not for you ❤️");
             }
 
             ;; TODO: test this
-            if (now() >= end_at) {
+            if ((end_at != 0) & (now() >= end_at)) {
                 store_data(3, ;; set contract to close
                         nft_address,
                         deployer_address,
@@ -182,10 +169,8 @@
 
                 ;; Send money back
                 int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
-                if (new_fwd_amount > 0 & is_ton) {
-                    send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Out of time ⏰", 2);
-                } elseif (new_fwd_amount > 0) {
-                    ;; TODO: send jettons back
+                if (new_fwd_amount > 0) {
+                    send_money_or_jettons_back_body(in_msg_body, message_from, new_fwd_amount + fwd_fee, "Out of time ⏰", 2);
                 }
 
                 raw_reserve(100000, 0); ;; save little ammount
@@ -193,35 +178,29 @@
                 throw(0);
             }
 
-            (int nft_wc, _) = parse_std_addr(nft_address);
-            (int buyer_wc, _) = parse_std_addr(message_from);
-            if (buyer_wc != nft_wc) {
-                ;; Send money back
-                int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
-                throw_unless(57, new_fwd_amount > 0);
-                send_message_with_text(message_from, new_fwd_amount + fwd_fee, "Not same WC 🌭", 2);
-                throw(0);
+            ;; TODO: add tests
+            if (~ workchains_equal?(nft_address, message_from)) {
+                send_money_or_jettons_back_body(in_msg_body, msg_value, fwd_fee, "Not same WC 🌭️");
             }
 
             if ((marketplace_numerator > 0) & (marketplace_denominator > 0)) {
                 market_fee = min(price, muldiv(price, marketplace_numerator, marketplace_denominator));
             }
-
             price -= market_fee;
 
             if ((royalty_numerator > 0) & (royalty_denominator > 0) & (price > 0)) {
                 royalty_fee = min(price, muldiv(price, royalty_numerator, royalty_denominator));
             }
-
             price -= royalty_fee;
 
             if (is_ton == 1) {
+                ;; Ok, in theory someone can send 1 jetton and many TON
+                ;; If he bought NFT - no problem, he can get his jettons back thrue admin interface
+                ;; If he don't bought NFT - he will get all jettons back with all TONs
+
                 ;; Buy with TON
                 if (msg_value - price - royalty_fee - market_fee - little_gas_amount <= 0) {
-                    ;; Send money back
-                    int new_fwd_amount = msg_value - fwd_fee - little_gas_amount;
-                    throw_unless(229, new_fwd_amount > 0);
-                    send_message_with_text(message_from, new_fwd_amount + fwd_fee, "No funds 🌚", 2);
+                    send_money_or_jettons_back_body(in_msg_body, msg_value, fwd_fee, "No funds 🌚");
                 } else {
                     send_message_with_text(marketplace, market_fee, "Market fee, sir 🤌", 1);
                     send_message_with_text(royalty_destanation, royalty_fee, "Hey, your royalty, sir 🤌", 1);
@@ -244,11 +223,16 @@
                 throw(0);
             } else {
                 ;; TODO: buy with jetton
-                throw(0);
+                ;; TODO: add tests
+                int op = in_msg_body~load_uint(32);
+
+                if (op == op::ft::transfer_notification) {
+
+                } else {
+                    send_money_back(msg_value, fwd_fee, "Not jettons 🙄");
+                }
             }
-
         }
-
     }
 
     int op = in_msg_body~load_uint(32);
@@ -287,5 +271,5 @@
 }
 
 () recv_external(slice in_msg_body) impure {
-    ;; handle external messages
+    ;; TODO: allow cancel auction with external message when it's out of time
 }
