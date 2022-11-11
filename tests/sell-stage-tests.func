@@ -1,4 +1,4 @@
-#include "utils/sell-storage.func";
+#include "utils/storage.func";
 
 ;; TODO: add tests for buying with exact number on TON
 ;; TODO: buy, but with gas fail on transfer, then use mode 2 to get item
@@ -22,7 +22,7 @@ int __test_try_to_buy(){
     int royalty = 5;
     int marketplace_fee = 5;
 
-    set_fake_data(
+    set_fake_sell_data(
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,
@@ -113,7 +113,7 @@ int __test_try_to_buy_no_funds(){
     int royalty = 5;
     int marketplace_fee = 5;
 
-    set_fake_data(
+    set_fake_sell_data(
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,
@@ -164,7 +164,7 @@ int __test_try_to_not_from_this_wc(){
     int royalty = 5;
     int marketplace_fee = 5;
 
-    set_fake_data(
+    set_fake_sell_data(
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,
@@ -224,7 +224,7 @@ int __test_try_fail_to_buy_limited_sale(){
     int royalty = 5;
     int marketplace_fee = 5;
 
-    set_fake_data(
+    set_fake_sell_data(
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,
@@ -276,7 +276,7 @@ int __test_try_to_buy_limited_sale(){
     int royalty = 5;
     int marketplace_fee = 5;
 
-    set_fake_data(
+    set_fake_sell_data(
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,

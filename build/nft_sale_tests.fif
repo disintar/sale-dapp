@@ -1,5 +1,5 @@
 "Asm.fif" include
-// automatically generated from `/Users/tvorogme/Library/Application Support/toncli/func-libs/error_codes.func` `/Users/tvorogme/Library/Application Support/toncli/func-libs/math.func` `/Users/tvorogme/Library/Application Support/toncli/func-libs/stdlib.func` `/Users/tvorogme/Library/Application Support/toncli/test-libs/__init__.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/address_helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/bad_messages_generator.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/tests-helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/c5_parse_helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/message_helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/storage-test-helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/token-helpers.func` `/Users/tvorogme/projects/nft_ultimate_sale/func/contract.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/asm/helpers.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/asm/dump-utils.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/op_codes.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/magic_constants.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/storage.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/messages.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/get_methods.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/admin_methods.func` `/Users/tvorogme/projects/nft_ultimate_sale/tests/tests.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/get-methods-tests.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/init-stage-tests.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/utils/init-storage.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/sell-stage-tests.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/utils/sell-storage.func` 
+// automatically generated from `/Users/tvorogme/Library/Application Support/toncli/func-libs/error_codes.func` `/Users/tvorogme/Library/Application Support/toncli/func-libs/math.func` `/Users/tvorogme/Library/Application Support/toncli/func-libs/stdlib.func` `/Users/tvorogme/Library/Application Support/toncli/test-libs/__init__.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/address_helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/bad_messages_generator.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/tests-helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/c5_parse_helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/message_helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/storage-test-helpers.func` incl:`/Users/tvorogme/Library/Application Support/toncli/test-libs/token-helpers.func` `/Users/tvorogme/projects/nft_ultimate_sale/func/contract.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/asm/helpers.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/asm/dump-utils.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/op_codes.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/magic_constants.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/storage.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/messages.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/get_methods.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/func/admin_methods.func` `/Users/tvorogme/projects/nft_ultimate_sale/tests/tests.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/get-methods-tests.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/init-stage-tests.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/utils/storage.func` incl:`/Users/tvorogme/projects/nft_ultimate_sale/tests/sell-stage-tests.func` 
 PROGRAM{
   DECLPROC power
   DECLPROC sqrt
@@ -7,6 +7,7 @@ PROGRAM{
   DECLPROC exp
   DECLPROC log2
   114362 DECLMETHOD generate_empty_address
+  95749 DECLMETHOD addr_null
   103563 DECLMETHOD generate_internal_address
   71142 DECLMETHOD generate_internal_address_with_custom_data
   105789 DECLMETHOD generate_external_address
@@ -84,12 +85,13 @@ PROGRAM{
   DECLPROC recv_internal
   DECLPROC recv_external
   DECLPROC __test_get_version
-  DECLPROC set_fake_init_data
+  DECLPROC set_fake_data_ultimate
+  DECLPROC set_fake_sell_data
+  DECLPROC set_init_fake_data
   DECLPROC __test_get_init_mode
   DECLPROC generate_ownership_assigned
   DECLPROC __test_init
   DECLPROC __test_init_not_our_owner
-  DECLPROC set_fake_data
   DECLPROC __test_try_to_buy
   DECLPROC __test_try_to_buy_no_funds
   DECLPROC __test_try_to_not_from_this_wc
@@ -259,6 +261,10 @@ PROGRAM{
     2 STU	//  _3
     ENDC	//  _4
     CTOS	//  _5
+  }>
+  addr_null PROC:<{
+    // 
+    generate_empty_address CALLDICT	//  _0
   }>
   generate_internal_address PROC:<{
     // 
@@ -3068,64 +3074,98 @@ PROGRAM{
     EQUAL	//  gas_used _13
     92 THROWIFNOT
   }>
-  set_fake_init_data PROC:<{
-    // 
-    NEWC	//  main_data
-    0 PUSHINT	//  main_data _2=0
-    SWAP	//  _2=0 main_data
-    8 STU	//  main_data
-    NOW	//  main_data _5
-    SWAP	//  _5 main_data
-    32 STU	//  main_data
-    x{801CA9E9D9B4A50E9747F3490320BB268E27548ED3E1A0959C8580749B0D495EBF1_} PUSHSLICE	//  main_data _8
-    STSLICER	//  main_data
-    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  main_data _10
-    STSLICER	//  main_data
-    0 PUSHINT	//  main_data _12=0
-    SWAP	//  _12=0 main_data
-    2 STU	//  main_data
-    NEWC	//  main_data sell_config
-    10 PUSHINT	//  main_data sell_config _17=10
-    SWAP	//  main_data _17=10 sell_config
-    16 STU	//  main_data sell_config
-    100 PUSHINT	//  main_data sell_config _20=100
-    SWAP	//  main_data _20=100 sell_config
-    16 STU	//  main_data sell_config
-    5 PUSHINT	//  main_data sell_config _23=5
-    SWAP	//  main_data _23=5 sell_config
-    16 STU	//  main_data sell_config
-    100 PUSHINT	//  main_data sell_config _26=100
-    SWAP	//  main_data _26=100 sell_config
-    16 STU	//  main_data sell_config
-    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  main_data sell_config _29
-    STSLICER	//  main_data sell_config
-    ENDC	//  main_data sell_config_cell
-    SWAP	//  sell_config_cell main_data
-    STREF	//  main_data
-    NEWC	//  main_data price_config
-    1 PUSHINT	//  main_data price_config _36=1
-    SWAP	//  main_data _36=1 price_config
-    1 STU	//  main_data price_config
-    100000000000 PUSHINT	//  main_data price_config _41
-    STGRAMS	//  main_data price_config
-    0 PUSHINT	//  main_data price_config _43=0
-    SWAP	//  main_data _43=0 price_config
-    2 STU	//  main_data price_config
-    0 PUSHINT	//  main_data price_config _46=0
-    SWAP	//  main_data _46=0 price_config
-    32 STU	//  main_data price_config
-    0 PUSHINT	//  main_data price_config _49=0
-    SWAP	//  main_data _49=0 price_config
-    2 STU	//  main_data price_config
+  set_fake_data_ultimate PROC:<{
+    //  mode nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+    s13 PUSH
+    NEWC	//  mode nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address mode main_data
+    8 STU	//  mode nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address main_data
+    s0 s14 XCHG	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address mode
+    0 EQINT	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address _19
+    IF:<{	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+      NOW	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address _20
+      s0 s14 XCHG2	//  jetton_address nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time _20 main_data
+      32 STU	//  jetton_address nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time main_data
+      s0 s13 XCHG	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+    }>	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+    s13 s12 XCHG2	//  limited_time jetton_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address main_data nft_address
+    STSLICER	//  limited_time jetton_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address main_data
+    s0 s10 XCHG2	//  limited_time jetton_address limit_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price main_data owner_address
+    STSLICER	//  limited_time jetton_address limit_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price main_data
+    s0 s8 XCHG2	//  limited_time jetton_address limit_address price marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton main_data buyer
+    STSLICER	//  limited_time jetton_address limit_address price marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton main_data
+    s0 s6 XCHG
+    NEWC	//  limited_time jetton_address limit_address price main_data marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton marketplace_fee_numenator sell_config
+    16 STU	//  limited_time jetton_address limit_address price main_data marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton sell_config
+    s1 s5 XCHG	//  limited_time jetton_address limit_address price main_data is_ton royalty_fee_numenator royalty_fee_denominator royalty_address marketplace_fee_denominator sell_config
+    16 STU	//  limited_time jetton_address limit_address price main_data is_ton royalty_fee_numenator royalty_fee_denominator royalty_address sell_config
+    s1 s3 XCHG	//  limited_time jetton_address limit_address price main_data is_ton royalty_address royalty_fee_denominator royalty_fee_numenator sell_config
+    16 STU	//  limited_time jetton_address limit_address price main_data is_ton royalty_address royalty_fee_denominator sell_config
+    16 STU	//  limited_time jetton_address limit_address price main_data is_ton royalty_address sell_config
+    SWAP	//  limited_time jetton_address limit_address price main_data is_ton sell_config royalty_address
+    STSLICER	//  limited_time jetton_address limit_address price main_data is_ton sell_config
+    ENDC	//  limited_time jetton_address limit_address price main_data is_ton sell_config_cell
+    ROT	//  limited_time jetton_address limit_address price is_ton sell_config_cell main_data
+    STREF	//  limited_time jetton_address limit_address price is_ton main_data
+    SWAP
+    NEWC	//  limited_time jetton_address limit_address price main_data is_ton price_config
+    1 STU	//  limited_time jetton_address limit_address price main_data price_config
+    ROT	//  limited_time jetton_address limit_address main_data price_config price
+    STGRAMS	//  limited_time jetton_address limit_address main_data price_config
+    ROT	//  limited_time jetton_address main_data price_config limit_address
+    STSLICER	//  limited_time jetton_address main_data price_config
+    s1 s3 XCHG	//  main_data jetton_address limited_time price_config
+    32 STU	//  main_data jetton_address price_config
+    SWAP	//  main_data price_config jetton_address
+    STSLICER	//  main_data price_config
     ENDC	//  main_data price_config_cell
     SWAP	//  price_config_cell main_data
     STREF	//  main_data
-    ENDC	//  _55
+    ENDC	//  _52
     c4 POP
+  }>
+  set_fake_sell_data PROC:<{
+    //  price royalty marketplace_fee limit_address
+    1 PUSHINT	//  price royalty marketplace_fee limit_address _4=1
+    x{801CA9E9D9B4A50E9747F3490320BB268E27548ED3E1A0959C8580749B0D495EBF1_} PUSHSLICE	//  price royalty marketplace_fee limit_address _4=1 _5
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  price royalty marketplace_fee limit_address _4=1 _5 _6
+    addr_null CALLDICT	//  price royalty marketplace_fee limit_address _4=1 _5 _6 _7
+    100 PUSHINT	//  price royalty marketplace_fee limit_address _4=1 _5 _6 _7 _8=100
+    DUP	//  price royalty marketplace_fee limit_address _4=1 _5 _6 _7 _8=100 _9=100
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  price royalty marketplace_fee limit_address _4=1 _5 _6 _7 _8=100 _9=100 _10
+    s6 PUSH	//  price royalty marketplace_fee limit_address _4=1 _5 _6 _7 _8=100 _9=100 _10 _11=1
+    0 PUSHINT	//  price royalty marketplace_fee limit_address _4=1 _5 _6 _7 _8=100 _9=100 _10 _11=1 _12=0
+    addr_null CALLDICT	//  price royalty marketplace_fee limit_address _4=1 _5 _6 _7 _8=100 _9=100 _10 _11=1 _12=0 _13
+    s9 s13 XCHG
+    s8 s12 XCHG
+    s7 s11 XCHG
+    5 6 REVERSE
+    s5 s8 XCHG
+    s5 s7 XCHG
+    s4 s6 XCHG
+    s3 s5 XCHG
+    s2 s4 XCHG	//  _4=1 _5 _6 _7 marketplace_fee _8=100 royalty _9=100 _10 _11=1 price limit_address _12=0 _13
+    set_fake_data_ultimate CALLDICT
+  }>
+  set_init_fake_data PROC:<{
+    // 
+    0 PUSHINT	//  _0=0
+    x{801CA9E9D9B4A50E9747F3490320BB268E27548ED3E1A0959C8580749B0D495EBF1_} PUSHSLICE	//  _0=0 _1
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  _0=0 _1 _2
+    addr_null CALLDICT	//  _0=0 _1 _2 _3
+    10 PUSHINT	//  _0=0 _1 _2 _3 _4=10
+    100 PUSHINT	//  _0=0 _1 _2 _3 _4=10 _5=100
+    2DUP	//  _0=0 _1 _2 _3 _4=10 _5=100 _6=10 _7=100
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  _0=0 _1 _2 _3 _4=10 _5=100 _6=10 _7=100 _8
+    1 PUSHINT	//  _0=0 _1 _2 _3 _4=10 _5=100 _6=10 _7=100 _8 _9=1
+    100000000000 PUSHINT	//  _0=0 _1 _2 _3 _4=10 _5=100 _6=10 _7=100 _8 _9=1 _12
+    addr_null CALLDICT	//  _0=0 _1 _2 _3 _4=10 _5=100 _6=10 _7=100 _8 _9=1 _12 _13
+    s11 PUSH	//  _0=0 _1 _2 _3 _4=10 _5=100 _6=10 _7=100 _8 _9=1 _12 _13 _14=0
+    addr_null CALLDICT	//  _0=0 _1 _2 _3 _4=10 _5=100 _6=10 _7=100 _8 _9=1 _12 _13 _14=0 _15
+    set_fake_data_ultimate CALLDICT
   }>
   __test_get_init_mode PROC:<{
     // 
-    set_fake_init_data CALLDICT
+    set_init_fake_data CALLDICT
     CONT:<{
       get_sell_info CALLDICT
     }>	//  _3
@@ -3166,7 +3206,7 @@ PROGRAM{
   }>
   __test_init PROC:<{
     // 
-    set_fake_init_data CALLDICT
+    set_init_fake_data CALLDICT
     0 PUSHINT	//  _2=0
     1000000000 PUSHINT	//  _2=0 _3=1000000000
     OVER	//  _2=0 _3=1000000000 _4=0
@@ -3255,7 +3295,7 @@ PROGRAM{
   }>
   __test_init_not_our_owner PROC:<{
     // 
-    set_fake_init_data CALLDICT
+    set_init_fake_data CALLDICT
     1 PUSHINT	//  _2=1
     generate_any_address CALLDICT	//  random_owner
     DUP	//  random_owner random_owner
@@ -3382,55 +3422,6 @@ PROGRAM{
     105 THROWIFNOT
     PAIR	//  _138
   }>
-  set_fake_data PROC:<{
-    //  price royalty marketplace_fee limit_address
-    NEWC	//  price royalty marketplace_fee limit_address main_data
-    1 PUSHINT	//  price royalty marketplace_fee limit_address main_data _6=1
-    SWAP	//  price royalty marketplace_fee limit_address _6=1 main_data
-    8 STU	//  price royalty marketplace_fee limit_address main_data
-    x{801CA9E9D9B4A50E9747F3490320BB268E27548ED3E1A0959C8580749B0D495EBF1_} PUSHSLICE	//  price royalty marketplace_fee limit_address main_data _9
-    STSLICER	//  price royalty marketplace_fee limit_address main_data
-    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  price royalty marketplace_fee limit_address main_data _11
-    STSLICER	//  price royalty marketplace_fee limit_address main_data
-    0 PUSHINT	//  price royalty marketplace_fee limit_address main_data _13=0
-    SWAP	//  price royalty marketplace_fee limit_address _13=0 main_data
-    2 STU	//  price royalty marketplace_fee limit_address main_data
-    s0 s2 XCHG
-    NEWC	//  price royalty main_data limit_address marketplace_fee sell_config
-    16 STU	//  price royalty main_data limit_address sell_config
-    100 PUSHINT	//  price royalty main_data limit_address sell_config _20=100
-    SWAP	//  price royalty main_data limit_address _20=100 sell_config
-    16 STU	//  price royalty main_data limit_address sell_config
-    s1 s3 XCHG	//  price limit_address main_data royalty sell_config
-    16 STU	//  price limit_address main_data sell_config
-    100 PUSHINT	//  price limit_address main_data sell_config _25=100
-    SWAP	//  price limit_address main_data _25=100 sell_config
-    16 STU	//  price limit_address main_data sell_config
-    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  price limit_address main_data sell_config _28
-    STSLICER	//  price limit_address main_data sell_config
-    ENDC	//  price limit_address main_data sell_config_cell
-    SWAP	//  price limit_address sell_config_cell main_data
-    STREF	//  price limit_address main_data
-    NEWC	//  price limit_address main_data price_config
-    1 PUSHINT	//  price limit_address main_data price_config _35=1
-    SWAP	//  price limit_address main_data _35=1 price_config
-    1 STU	//  price limit_address main_data price_config
-    s0 s3 XCHG2	//  main_data limit_address price_config price
-    STGRAMS	//  main_data limit_address price_config
-    SWAP	//  main_data price_config limit_address
-    STSLICER	//  main_data price_config
-    0 PUSHINT	//  main_data price_config _40=0
-    SWAP	//  main_data _40=0 price_config
-    32 STU	//  main_data price_config
-    0 PUSHINT	//  main_data price_config _43=0
-    SWAP	//  main_data _43=0 price_config
-    2 STU	//  main_data price_config
-    ENDC	//  main_data price_config_cell
-    SWAP	//  price_config_cell main_data
-    STREF	//  main_data
-    ENDC	//  _49
-    c4 POP
-  }>
   __test_try_to_buy PROC:<{
     // 
     RANDU256	//  address
@@ -3455,7 +3446,7 @@ PROGRAM{
     CTOS	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _34
     s3 s2 s(-2) PU2XC
     s3 s(-1) PUXC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 item_cost royalty=5 marketplace_fee=5 _34
-    set_fake_data CALLDICT
+    set_fake_sell_data CALLDICT
     3 BLKDROP	//  random_wallet money_to_send
     10000 PUSHINT	//  random_wallet money_to_send fwd_fee=10000
     0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _39=0
@@ -3574,7 +3565,7 @@ PROGRAM{
     2 STU	//  random_wallet item_cost royalty=5 marketplace_fee=5 _28
     ENDC	//  random_wallet item_cost royalty=5 marketplace_fee=5 _29
     CTOS	//  random_wallet item_cost royalty=5 marketplace_fee=5 _30
-    set_fake_data CALLDICT
+    set_fake_sell_data CALLDICT
     10000 PUSHINT	//  random_wallet fwd_fee=10000
     0 PUSHINT	//  random_wallet fwd_fee=10000 _35=0
     1234 PUSHINT	//  random_wallet fwd_fee=10000 _35=0 _36=1234
@@ -3658,7 +3649,7 @@ PROGRAM{
     2 STU	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _32
     ENDC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _33
     CTOS	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _34
-    set_fake_data CALLDICT
+    set_fake_sell_data CALLDICT
     10000 PUSHINT	//  random_wallet money_to_send fwd_fee=10000
     0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _39=0
     DUP	//  random_wallet money_to_send fwd_fee=10000 _39=0 _40=0
@@ -3717,7 +3708,7 @@ PROGRAM{
     5 PUSHINT	//  random_wallet random_wallet_limited money_to_send item_cost royalty=5
     s0 s1 s2 XCPUXC
     s0 s4 XCHG	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 random_wallet_limited
-    set_fake_data CALLDICT
+    set_fake_sell_data CALLDICT
     10000 PUSHINT	//  random_wallet money_to_send fwd_fee=10000
     0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _50=0
     DUP	//  random_wallet money_to_send fwd_fee=10000 _50=0 _51=0
@@ -3762,7 +3753,7 @@ PROGRAM{
     1000000000 PUSHINT	//  random_wallet money_to_send item_cost
     5 PUSHINT	//  random_wallet money_to_send item_cost royalty=5
     s0 s3 PUSH2	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 random_wallet
-    set_fake_data CALLDICT
+    set_fake_sell_data CALLDICT
     10000 PUSHINT	//  random_wallet money_to_send fwd_fee=10000
     0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _33=0
     DUP	//  random_wallet money_to_send fwd_fee=10000 _33=0 _34=0

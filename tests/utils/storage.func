@@ -1,0 +1,103 @@
+const slice nft_address = "EQDlT07NpSh0uj-aSBkF2TRxOqR2nw0ErOQsA6TYakr1-FxP"a;
+const slice owner_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
+const slice royalty_address = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
+
+_ set_fake_data_ultimate(
+        int mode,
+        slice nft_address,
+        slice owner_address,
+        slice buyer,
+        int marketplace_fee_numenator,
+        int marketplace_fee_denominator,
+        int royalty_fee_numenator,
+        int royalty_fee_denominator,
+        slice royalty_address,
+        int is_ton,
+        int price,
+        slice limit_address,
+        int limited_time,
+        slice jetton_address
+) impure {
+    builder  main_data = begin_cell();
+    main_data = store_uint(main_data, mode, 8); ;; sell mode
+
+    if (mode == 0) {
+        main_data = store_uint(main_data, now(), 32);
+    }
+
+    main_data = store_slice(main_data, nft_address); ;; nft
+    main_data = store_slice(main_data, owner_address); ;; owner
+    main_data = store_slice(main_data, buyer); ;; buyer (addr none)
+
+    builder sell_config = begin_cell();
+
+    ;; Marketplace fee
+    sell_config = store_uint(sell_config, marketplace_fee_numenator, 16);
+    sell_config = store_uint(sell_config, marketplace_fee_denominator, 16);
+
+    ;; Royalty fee
+    sell_config = store_uint(sell_config, royalty_fee_numenator, 16);
+    sell_config = store_uint(sell_config, royalty_fee_denominator, 16);
+    sell_config = store_slice(sell_config, royalty_address); ;; royalty beneficiar
+
+    cell sell_config_cell = sell_config.end_cell();
+    main_data = store_ref(main_data, sell_config_cell);
+
+    builder price_config = begin_cell();
+    price_config = store_uint(price_config, is_ton, 1); ;; is_ton
+    price_config = store_grams(price_config, price); ;; price
+    price_config = store_slice(price_config, limit_address); ;; limited sale for specific user
+    price_config = store_uint(price_config, limited_time, 32); ;; limited in time sale
+    price_config = store_slice(price_config, jetton_address); ;; addr none - jetton wallet address
+
+    cell price_config_cell = price_config.end_cell();
+
+    main_data = store_ref(main_data, price_config_cell);
+
+    set_data(main_data.end_cell());
+}
+
+_ set_fake_sell_data(
+        int price,
+        int royalty,
+        int marketplace_fee,
+        slice limit_address) impure {
+    set_fake_data_ultimate(
+            1, ;; mode
+            nft_address, ;; nft_address
+            owner_address, ;; owner_address
+            addr_null(), ;; buyer
+            marketplace_fee, ;; marketplace_fee_numenator
+            100, ;; marketplace_fee_denominator
+            royalty, ;; royalty_fee_numenator
+            100, ;; royalty_fee_denominator
+            royalty_address, ;; royalty_address
+            1, ;; is_ton
+            price, ;; price
+            limit_address, ;; limit_address
+            0, ;; limited_time
+            addr_null() ;; jetton_address
+    );
+}
+
+_ set_init_fake_data() impure {
+    set_fake_data_ultimate(
+            0,
+            nft_address,
+            owner_address,
+            addr_null(),
+            10,
+            100,
+            10,
+            100,
+            royalty_address,
+            1,
+            one_ton * 100,
+            addr_null(),
+            0,
+            addr_null()
+    );
+}
+
+
+
