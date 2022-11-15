@@ -1,3 +1,5 @@
+;; Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+
 () send_message(slice to_address,
         int amount,
         int op,

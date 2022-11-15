@@ -97,6 +97,9 @@ PROGRAM{
   DECLPROC __test_try_to_not_from_this_wc
   DECLPROC __test_try_fail_to_buy_limited_sale
   DECLPROC __test_try_to_buy_limited_sale
+  DECLPROC test_cancel_sale
+  DECLPROC __test_cancel_sale
+  DECLPROC __test_fail_cancel_sale
   power PROCREF:<{
     //  x exponent
     OVER	//  x exponent x
@@ -3439,108 +3442,104 @@ PROGRAM{
     1000000000 PUSHINT	//  random_wallet money_to_send item_cost
     5 PUSHINT	//  random_wallet money_to_send item_cost royalty=5
     DUP	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5
-    0 PUSHINT	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _29=0
-    NEWC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _29=0 _30
-    2 STU	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _32
-    ENDC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _33
-    CTOS	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _34
+    addr_null CALLDICT	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _29
     s3 s2 s(-2) PU2XC
-    s3 s(-1) PUXC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 item_cost royalty=5 marketplace_fee=5 _34
+    s3 s(-1) PUXC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 item_cost royalty=5 marketplace_fee=5 _29
     set_fake_sell_data CALLDICT
     3 BLKDROP	//  random_wallet money_to_send
     10000 PUSHINT	//  random_wallet money_to_send fwd_fee=10000
-    0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _39=0
-    DUP	//  random_wallet money_to_send fwd_fee=10000 _39=0 _40=0
-    NEWC	//  random_wallet money_to_send fwd_fee=10000 _39=0 _40=0 _41
-    MYADDR	//  random_wallet money_to_send fwd_fee=10000 _39=0 _40=0 _41 _42
+    0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _34=0
+    DUP	//  random_wallet money_to_send fwd_fee=10000 _34=0 _35=0
+    NEWC	//  random_wallet money_to_send fwd_fee=10000 _34=0 _35=0 _36
+    MYADDR	//  random_wallet money_to_send fwd_fee=10000 _34=0 _35=0 _36 _37
     s5 PUSH
     s4 s6 XCHG
     s0 s5 XCHG
     s3 s4 XCHG
     s2 s3 XCHG
-    s2 s7 XCHG	//  money_to_send _39=0 money_to_send _40=0 _41 random_wallet _42 fwd_fee=10000
+    s2 s7 XCHG	//  money_to_send _34=0 money_to_send _35=0 _36 random_wallet _37 fwd_fee=10000
     generate_internal_message_custom CALLDICT	//  money_to_send buy_nft_message
-    100000000 PUSHINT	//  money_to_send buy_nft_message _48
+    100000000 PUSHINT	//  money_to_send buy_nft_message _43
     -ROT
-    x{} PUSHSLICE	//  _48 money_to_send buy_nft_message _49
+    x{} PUSHSLICE	//  _43 money_to_send buy_nft_message _44
     4 TUPLE	//  internal_message_stack
     CONT:<{
       recv_internal CALLDICT
-    }>	//  internal_message_stack _52
-    SWAP	//  _52 internal_message_stack
-    invoke_method CALLDICT	//  _154 _155
+    }>	//  internal_message_stack _47
+    SWAP	//  _47 internal_message_stack
+    invoke_method CALLDICT	//  _149 _150
     DROP	//  gas_used
     parse_c5 INLINECALLDICT	//  gas_used actions
     DUP	//  gas_used actions actions
-    TLEN	//  gas_used actions _57
-    5 EQINT	//  gas_used actions _59
+    TLEN	//  gas_used actions _52
+    5 EQINT	//  gas_used actions _54
     95 THROWIFNOT
     DUP	//  gas_used actions actions
-    0 INDEX	//  gas_used actions _65
-    UNTRIPLE	//  gas_used actions _156 _157 _158
+    0 INDEX	//  gas_used actions _60
+    UNTRIPLE	//  gas_used actions _151 _152 _153
     DROP	//  gas_used actions action_type body
     SWAP	//  gas_used actions body action_type
-    0 EQINT	//  gas_used actions body _69
+    0 EQINT	//  gas_used actions body _64
     96 THROWIFNOT
     parse_internal_message CALLDICT	//  gas_used actions parsed_msg
-    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  gas_used actions parsed_msg _75
-    OVER	//  gas_used actions parsed_msg _75 parsed_msg
-    4 INDEX	//  gas_used actions parsed_msg _75 _77
-    SDEQ	//  gas_used actions parsed_msg _78
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  gas_used actions parsed_msg _70
+    OVER	//  gas_used actions parsed_msg _70 parsed_msg
+    4 INDEX	//  gas_used actions parsed_msg _70 _72
+    SDEQ	//  gas_used actions parsed_msg _73
     97 THROWIFNOT
     50000000 PUSHINT	//  gas_used actions parsed_msg market_fee_check
     SWAP	//  gas_used actions market_fee_check parsed_msg
-    5 INDEX	//  gas_used actions market_fee_check _85
-    s1 s(-1) PUXC	//  gas_used actions market_fee_check market_fee_check _85
-    EQUAL	//  gas_used actions market_fee_check _86
+    5 INDEX	//  gas_used actions market_fee_check _80
+    s1 s(-1) PUXC	//  gas_used actions market_fee_check market_fee_check _80
+    EQUAL	//  gas_used actions market_fee_check _81
     98 THROWIFNOT
-    x{4d61726b65742066656520636865636b6564} PUSHSLICE	//  gas_used actions market_fee_check _88
-    OVER	//  gas_used actions market_fee_check _88 market_fee_check
+    x{4d61726b65742066656520636865636b6564} PUSHSLICE	//  gas_used actions market_fee_check _83
+    OVER	//  gas_used actions market_fee_check _83 market_fee_check
     ~strdump_int CALLDICT
     DROP	//  gas_used actions
     DUP	//  gas_used actions actions
-    1 INDEX	//  gas_used actions _94
-    UNTRIPLE	//  gas_used actions _159 _160 _161
+    1 INDEX	//  gas_used actions _89
+    UNTRIPLE	//  gas_used actions _154 _155 _156
     DROP	//  gas_used actions action_type body
     SWAP	//  gas_used actions body action_type
-    0 EQINT	//  gas_used actions body _98
+    0 EQINT	//  gas_used actions body _93
     99 THROWIFNOT
     parse_internal_message CALLDICT	//  gas_used actions parsed_msg
-    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  gas_used actions parsed_msg _104
-    OVER	//  gas_used actions parsed_msg _104 parsed_msg
-    4 INDEX	//  gas_used actions parsed_msg _104 _106
-    SDEQ	//  gas_used actions parsed_msg _107
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  gas_used actions parsed_msg _99
+    OVER	//  gas_used actions parsed_msg _99 parsed_msg
+    4 INDEX	//  gas_used actions parsed_msg _99 _101
+    SDEQ	//  gas_used actions parsed_msg _102
     100 THROWIFNOT
     47500000 PUSHINT	//  gas_used actions parsed_msg royalty_fee_check
     SWAP	//  gas_used actions royalty_fee_check parsed_msg
-    5 INDEX	//  gas_used actions royalty_fee_check _115
-    s1 s(-1) PUXC	//  gas_used actions royalty_fee_check royalty_fee_check _115
-    EQUAL	//  gas_used actions royalty_fee_check _116
+    5 INDEX	//  gas_used actions royalty_fee_check _110
+    s1 s(-1) PUXC	//  gas_used actions royalty_fee_check royalty_fee_check _110
+    EQUAL	//  gas_used actions royalty_fee_check _111
     101 THROWIFNOT
-    x{526f61796c747920636865636b6564} PUSHSLICE	//  gas_used actions royalty_fee_check _118
-    OVER	//  gas_used actions royalty_fee_check _118 royalty_fee_check
+    x{526f61796c747920636865636b6564} PUSHSLICE	//  gas_used actions royalty_fee_check _113
+    OVER	//  gas_used actions royalty_fee_check _113 royalty_fee_check
     ~strdump_int CALLDICT
     DROP	//  gas_used actions
-    2 INDEX	//  gas_used _124
-    UNTRIPLE	//  gas_used _162 _163 _164
+    2 INDEX	//  gas_used _119
+    UNTRIPLE	//  gas_used _157 _158 _159
     DROP	//  gas_used action_type body
     SWAP	//  gas_used body action_type
-    0 EQINT	//  gas_used body _128
+    0 EQINT	//  gas_used body _123
     102 THROWIFNOT
     parse_internal_message CALLDICT	//  gas_used parsed_msg
-    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  gas_used parsed_msg _134
-    OVER	//  gas_used parsed_msg _134 parsed_msg
-    4 INDEX	//  gas_used parsed_msg _134 _136
-    SDEQ	//  gas_used parsed_msg _137
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  gas_used parsed_msg _129
+    OVER	//  gas_used parsed_msg _129 parsed_msg
+    4 INDEX	//  gas_used parsed_msg _129 _131
+    SDEQ	//  gas_used parsed_msg _132
     103 THROWIFNOT
     902500000 PUSHINT	//  gas_used parsed_msg price_check
     SWAP	//  gas_used price_check parsed_msg
-    5 INDEX	//  gas_used price_check _144
-    s1 s(-1) PUXC	//  gas_used price_check price_check _144
-    EQUAL	//  gas_used price_check _145
+    5 INDEX	//  gas_used price_check _139
+    s1 s(-1) PUXC	//  gas_used price_check price_check _139
+    EQUAL	//  gas_used price_check _140
     104 THROWIFNOT
-    x{507269636520636865636b6564} PUSHSLICE	//  gas_used price_check _147
-    OVER	//  gas_used price_check _147 price_check
+    x{507269636520636865636b6564} PUSHSLICE	//  gas_used price_check _142
+    OVER	//  gas_used price_check _142 price_check
     ~strdump_int CALLDICT
     DROP	//  gas_used
   }>
@@ -3560,31 +3559,27 @@ PROGRAM{
     1000000000 PUSHINT	//  random_wallet item_cost
     5 PUSHINT	//  random_wallet item_cost royalty=5
     DUP	//  random_wallet item_cost royalty=5 marketplace_fee=5
-    0 PUSHINT	//  random_wallet item_cost royalty=5 marketplace_fee=5 _25=0
-    NEWC	//  random_wallet item_cost royalty=5 marketplace_fee=5 _25=0 _26
-    2 STU	//  random_wallet item_cost royalty=5 marketplace_fee=5 _28
-    ENDC	//  random_wallet item_cost royalty=5 marketplace_fee=5 _29
-    CTOS	//  random_wallet item_cost royalty=5 marketplace_fee=5 _30
+    addr_null CALLDICT	//  random_wallet item_cost royalty=5 marketplace_fee=5 _25
     set_fake_sell_data CALLDICT
     10000 PUSHINT	//  random_wallet fwd_fee=10000
-    0 PUSHINT	//  random_wallet fwd_fee=10000 _35=0
-    1234 PUSHINT	//  random_wallet fwd_fee=10000 _35=0 _36=1234
-    OVER	//  random_wallet fwd_fee=10000 _35=0 _36=1234 _37=0
-    NEWC	//  random_wallet fwd_fee=10000 _35=0 _36=1234 _37=0 _38
-    MYADDR	//  random_wallet fwd_fee=10000 _35=0 _36=1234 _37=0 _38 _39
+    0 PUSHINT	//  random_wallet fwd_fee=10000 _30=0
+    1234 PUSHINT	//  random_wallet fwd_fee=10000 _30=0 _31=1234
+    OVER	//  random_wallet fwd_fee=10000 _30=0 _31=1234 _32=0
+    NEWC	//  random_wallet fwd_fee=10000 _30=0 _31=1234 _32=0 _33
+    MYADDR	//  random_wallet fwd_fee=10000 _30=0 _31=1234 _32=0 _33 _34
     s4 s6 XCHG
     s3 s5 XCHG
-    s4 s0 s3 XCHG3	//  _35=0 _36=1234 _37=0 _38 random_wallet _39 fwd_fee=10000
+    s4 s0 s3 XCHG3	//  _30=0 _31=1234 _32=0 _33 random_wallet _34 fwd_fee=10000
     generate_internal_message_custom CALLDICT	//  buy_nft_message
-    100000000 PUSHINT	//  buy_nft_message _45
+    100000000 PUSHINT	//  buy_nft_message _40
     1234 PUSHINT
     ROT
-    x{} PUSHSLICE	//  _45 _46=1234 buy_nft_message _47
+    x{} PUSHSLICE	//  _40 _41=1234 buy_nft_message _42
     4 TUPLE	//  internal_message_stack
     CONT:<{
       recv_internal CALLDICT
-    }>	//  internal_message_stack _51
-    SWAP	//  _51 internal_message_stack
+    }>	//  internal_message_stack _46
+    SWAP	//  _46 internal_message_stack
     {
     c7 PUSH DUP FIRST
     GASLIMITSTEMP SWAP DROP
@@ -3621,10 +3616,10 @@ PROGRAM{
     TRY
     }> PUSHCONT
     ROT INC -1 PUSHINT
-    CALLXVARARGS	//  _57 _58 _59
+    CALLXVARARGS	//  _52 _53 _54
     DROP	//  exit_code gas_used
     SWAP	//  gas_used exit_code
-    57 EQINT	//  gas_used _55
+    57 EQINT	//  gas_used _50
     95 THROWIFNOT
   }>
   __test_try_to_not_from_this_wc PROC:<{
@@ -3644,37 +3639,33 @@ PROGRAM{
     1000000000 PUSHINT	//  random_wallet money_to_send item_cost
     5 PUSHINT	//  random_wallet money_to_send item_cost royalty=5
     DUP	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5
-    0 PUSHINT	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _29=0
-    NEWC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _29=0 _30
-    2 STU	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _32
-    ENDC	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _33
-    CTOS	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _34
+    addr_null CALLDICT	//  random_wallet money_to_send item_cost royalty=5 marketplace_fee=5 _29
     set_fake_sell_data CALLDICT
     10000 PUSHINT	//  random_wallet money_to_send fwd_fee=10000
-    0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _39=0
-    DUP	//  random_wallet money_to_send fwd_fee=10000 _39=0 _40=0
-    NEWC	//  random_wallet money_to_send fwd_fee=10000 _39=0 _40=0 _41
-    MYADDR	//  random_wallet money_to_send fwd_fee=10000 _39=0 _40=0 _41 _42
+    0 PUSHINT	//  random_wallet money_to_send fwd_fee=10000 _34=0
+    DUP	//  random_wallet money_to_send fwd_fee=10000 _34=0 _35=0
+    NEWC	//  random_wallet money_to_send fwd_fee=10000 _34=0 _35=0 _36
+    MYADDR	//  random_wallet money_to_send fwd_fee=10000 _34=0 _35=0 _36 _37
     s5 PUSH
     s4 s6 XCHG
     s0 s5 XCHG
     s3 s4 XCHG
     s2 s3 XCHG
-    s2 s7 XCHG	//  money_to_send _39=0 money_to_send _40=0 _41 random_wallet _42 fwd_fee=10000
+    s2 s7 XCHG	//  money_to_send _34=0 money_to_send _35=0 _36 random_wallet _37 fwd_fee=10000
     generate_internal_message_custom CALLDICT	//  money_to_send buy_nft_message
-    100000000 PUSHINT	//  money_to_send buy_nft_message _48
+    100000000 PUSHINT	//  money_to_send buy_nft_message _43
     -ROT
-    x{} PUSHSLICE	//  _48 money_to_send buy_nft_message _49
+    x{} PUSHSLICE	//  _43 money_to_send buy_nft_message _44
     4 TUPLE	//  internal_message_stack
     CONT:<{
       recv_internal CALLDICT
-    }>	//  internal_message_stack _52
-    SWAP	//  _52 internal_message_stack
-    invoke_method CALLDICT	//  _61 _62
+    }>	//  internal_message_stack _47
+    SWAP	//  _47 internal_message_stack
+    invoke_method CALLDICT	//  _56 _57
     DROP	//  gas_used
     parse_c5 INLINECALLDICT	//  gas_used actions
-    TLEN	//  gas_used _57
-    1 EQINT	//  gas_used _59
+    TLEN	//  gas_used _52
+    1 EQINT	//  gas_used _54
     95 THROWIFNOT
   }>
   __test_try_fail_to_buy_limited_sale PROC:<{
@@ -3780,5 +3771,106 @@ PROGRAM{
     TLEN	//  gas_used _51
     5 EQINT	//  gas_used _53
     95 THROWIFNOT
+  }>
+  test_cancel_sale PROCINLINE:<{
+    //  address
+    1000000000000 PUSHINT	//  address money_to_send
+    1000000000 PUSHINT	//  address money_to_send item_cost
+    5 PUSHINT	//  address money_to_send item_cost royalty=5
+    DUP	//  address money_to_send item_cost royalty=5 marketplace_fee=5
+    10000 PUSHINT	//  address money_to_send item_cost royalty=5 marketplace_fee=5 fwd_fee=10000
+    addr_null CALLDICT	//  address money_to_send item_cost royalty=5 marketplace_fee=5 fwd_fee=10000 _15
+    s1 s4 XCHG
+    s3 s3 s0 XCHG3	//  address money_to_send fwd_fee=10000 item_cost royalty=5 marketplace_fee=5 _15
+    set_fake_sell_data CALLDICT
+    CONT:<{
+      get_sell_info CALLDICT
+    }>	//  address money_to_send fwd_fee=10000 _19
+    0 TUPLE	//  address money_to_send fwd_fee=10000 _19 _20
+    invoke_method CALLDICT	//  address money_to_send fwd_fee=10000 _101 _102
+    NIP	//  address money_to_send fwd_fee=10000 stack
+    FIRST	//  address money_to_send fwd_fee=10000 _23
+    1 EQINT	//  address money_to_send fwd_fee=10000 _25
+    95 THROWIFNOT
+    NEWC	//  address money_to_send fwd_fee=10000 cancel_message
+    11 PUSHINT	//  address money_to_send fwd_fee=10000 cancel_message _29=11
+    SWAP	//  address money_to_send fwd_fee=10000 _29=11 cancel_message
+    32 STU	//  address money_to_send fwd_fee=10000 cancel_message
+    0 PUSHINT	//  address money_to_send fwd_fee=10000 cancel_message _33=0
+    DUP	//  address money_to_send fwd_fee=10000 cancel_message _33=0 _34=0
+    MYADDR	//  address money_to_send fwd_fee=10000 cancel_message _33=0 _34=0 _35
+    s5 PUSH
+    s0 s3 XCHG
+    s4 s1 s4 XCPUXC
+    s8 s0 s6 PUXC2	//  address money_to_send cancel_message _33=0 money_to_send _34=0 cancel_message address _35 fwd_fee=10000
+    generate_internal_message_custom CALLDICT	//  address money_to_send cancel_message buy_nft_message
+    100000000 PUSHINT	//  address money_to_send cancel_message buy_nft_message _41
+    s0 s2 XCHG	//  address money_to_send _41 buy_nft_message cancel_message
+    ENDC	//  address money_to_send _41 buy_nft_message _42
+    CTOS	//  address money_to_send _41 buy_nft_message _43
+    s2 s3 XCHG	//  address _41 money_to_send buy_nft_message _43
+    4 TUPLE	//  address internal_message_stack
+    CONT:<{
+      recv_internal CALLDICT
+    }>	//  address internal_message_stack _46
+    SWAP	//  address _46 internal_message_stack
+    invoke_method CALLDICT	//  address _103 _104
+    DROP	//  address gas_used
+    parse_c5 INLINECALLDICT	//  address gas_used actions
+    CONT:<{
+      get_sell_info CALLDICT
+    }>	//  address gas_used actions _52
+    0 TUPLE	//  address gas_used actions _52 _53
+    invoke_method CALLDICT	//  address gas_used actions _105 _106
+    NIP	//  address gas_used actions stack
+    s0 s3 XCHG
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  stack gas_used actions address _55
+    SDEQ	//  stack gas_used actions _56
+    IF:<{	//  stack gas_used actions
+      s0 s2 XCHG	//  actions gas_used stack
+      FIRST	//  actions gas_used _58
+      3 EQINT	//  actions gas_used _60
+      95 THROWIFNOT
+      OVER	//  actions gas_used actions
+      TLEN	//  actions gas_used _63
+      2 EQINT	//  actions gas_used _65
+      96 THROWIFNOT
+      SWAP	//  gas_used actions
+      1 INDEX	//  gas_used _71
+      UNTRIPLE	//  gas_used _107 _108 _109
+      DROP	//  gas_used action_type body
+      SWAP	//  gas_used body action_type
+      0 EQINT	//  gas_used body _75
+      97 THROWIFNOT
+      parse_internal_message CALLDICT	//  gas_used parsed_msg
+      x{801CA9E9D9B4A50E9747F3490320BB268E27548ED3E1A0959C8580749B0D495EBF1_} PUSHSLICE	//  gas_used parsed_msg _81
+      OVER	//  gas_used parsed_msg _81 parsed_msg
+      4 INDEX	//  gas_used parsed_msg _81 _83
+      SDEQ	//  gas_used parsed_msg _84
+      98 THROWIFNOT
+      8 INDEX	//  gas_used msg_body
+      32 LDU	//  gas_used _111 _110
+      DROP	//  gas_used _90
+      1607220500 PUSHINT	//  gas_used _90 _93=1607220500
+      EQUAL	//  gas_used _94
+      99 THROWIFNOT
+    }>ELSE<{	//  stack gas_used actions
+      DROP	//  stack gas_used
+      SWAP	//  gas_used stack
+      FIRST	//  gas_used _97
+      1 EQINT	//  gas_used _99
+      99 THROWIFNOT
+    }>
+  }>
+  __test_cancel_sale PROC:<{
+    // 
+    x{801D65D5F2FD4653268E024E410430E90EB15106E95A577AE73F8EB9356747E467B_} PUSHSLICE	//  _0
+    test_cancel_sale INLINECALLDICT	//  _1
+  }>
+  __test_fail_cancel_sale PROC:<{
+    // 
+    1 PUSHINT	//  _0=1
+    generate_any_address CALLDICT	//  _1
+    test_cancel_sale INLINECALLDICT	//  _2
   }>
 }END>c

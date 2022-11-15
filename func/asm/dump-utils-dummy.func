@@ -1,0 +1,11 @@
+forall X -> X ~strdump_safe_not_pretty(slice value) asm "";
+forall X -> X ~dump_safe(X value) asm "";
+_ ~strdump_safe(slice text) inline_ref {
+
+}
+_ ~strdump_value(slice text, var value) inline_ref {
+    ~dump_safe(value);
+}
+_ ~strdump_int(slice text, int value) inline_ref {
+
+}

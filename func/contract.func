@@ -1,7 +1,13 @@
+;; Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+
 #pragma version >=0.2.0;
 
 #include "asm/helpers.func";
 #include "asm/dump-utils.func";
+;; Thanks @NickNekilov for idea
+;; USE IN PRODUCTION:
+;; #include "asm/dump-utils-dummy.func";
+
 #include "op_codes.func";
 #include "magic_constants.func";
 #include "storage.func";
@@ -141,6 +147,7 @@
             ;; Here we can buy NFT or change settings
             int op = in_msg_body~load_uint(32);
 
+            ;; TODO: add text commands
             ;; Change price
             if (op == op::seller::update_sale) {
                 ~strdump_safe("Process update sale");
@@ -157,7 +164,6 @@
             } elseif (op == op::seller::cancel_sell) {
                 ~strdump_safe("Process cancel sale");
 
-                ;; TODO: add tests
                 store_data(3, ;; set contract to close
                         nft_address,
                         deployer_address,

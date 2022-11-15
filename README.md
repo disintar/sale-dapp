@@ -31,3 +31,7 @@ Final status: [SUCCESS] - 9 cases
 Final status: [FAILED] - 0 cases
 
 ```
+
+### License
+
+Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1

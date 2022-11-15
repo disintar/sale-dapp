@@ -1,3 +1,5 @@
+;; Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+
 #pragma version >=0.2.0;
 #include "get-methods-tests.func";
 #include "init-stage-tests.func";

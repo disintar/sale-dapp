@@ -1,3 +1,5 @@
+;; Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+
 #include "utils/storage.func";
 
 ;; TODO: add tests for buying with exact number on TON
@@ -26,7 +28,7 @@ int __test_try_to_buy(){
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,
-            begin_cell().store_uint(0, 2).end_cell().begin_parse() ;; limited sale for specific user
+            addr_null() ;; limited sale for specific user
     );
 
 
@@ -94,7 +96,6 @@ int __test_try_to_buy(){
     return gas_used;
 }
 
-
 int __test_try_to_buy_no_funds(){
     var address = random();
 
@@ -117,7 +118,7 @@ int __test_try_to_buy_no_funds(){
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,
-            begin_cell().store_uint(0, 2).end_cell().begin_parse() ;; limited sale for specific user
+            addr_null() ;; limited sale for specific user
     );
 
 
@@ -143,8 +144,6 @@ int __test_try_to_buy_no_funds(){
     return gas_used;
 }
 
-
-
 int __test_try_to_not_from_this_wc(){
     var address = random();
 
@@ -168,7 +167,7 @@ int __test_try_to_not_from_this_wc(){
             item_cost, ;; price 1 ton
             royalty,
             marketplace_fee,
-            begin_cell().store_uint(0, 2).end_cell().begin_parse() ;; limited sale for specific user
+            addr_null() ;; limited sale for specific user
     );
 
 
@@ -195,7 +194,6 @@ int __test_try_to_not_from_this_wc(){
 
     return gas_used;
 }
-
 
 int __test_try_fail_to_buy_limited_sale(){
     var address = random();
@@ -256,7 +254,6 @@ int __test_try_fail_to_buy_limited_sale(){
     return gas_used;
 }
 
-
 int __test_try_to_buy_limited_sale(){
     var address = random();
 
@@ -306,4 +303,80 @@ int __test_try_to_buy_limited_sale(){
     throw_unless(95, actions.tuple_length() == 5);
 
     return gas_used;
+}
+
+int test_cancel_sale(slice address) impure inline {
+    int money_to_send = one_ton * 1000;
+    int item_cost = 1 * one_ton;
+    int royalty = 5;
+    int marketplace_fee = 5;
+    int fwd_fee = 10000;
+
+    set_fake_sell_data(
+            item_cost, ;; price 1 ton
+            royalty,
+            marketplace_fee,
+            addr_null() ;; limited sale for specific user
+    );
+
+    ;; check that current mode is sell
+    (_, tuple stack) = invoke_method(get_sell_info, []);
+    throw_unless(95, stack.first() == 1);
+
+    builder cancel_message = begin_cell();
+    cancel_message = store_uint(cancel_message, op::seller::cancel_sell, 32);
+
+    cell buy_nft_message = generate_internal_message_custom(
+            0, ;; bounce
+            money_to_send, ;; ton_amount - really big money here
+            0, ;; init_state
+            cancel_message, ;; payload
+            address, ;; src
+            my_address(), ;; dest
+            fwd_fee); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            money_to_send, ;; msg_value
+            buy_nft_message, ;; in_msg_full
+            cancel_message.end_cell().begin_parse()]; ;; in_msg_body
+
+    (int gas_used, _) = invoke_method(recv_internal, internal_message_stack);
+    tuple actions = parse_c5();
+
+    ;; check that current mode is canceled
+    (_, tuple stack) = invoke_method(get_sell_info, []);
+
+
+    ;; if owner send cancel request we must close sale
+    if (equal_slices(address, owner_address)) {
+        throw_unless(95, stack.first() == 3);
+
+        ;; 0 - reserve some money
+        ;; 1 - transfer nft back
+        throw_unless(96, actions.tuple_length() == 2);
+
+        (int action_type, cell body, int mode) = actions.at(1).untriple();
+        throw_unless(97, action_type == 0);
+
+        tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+        throw_unless(98, equal_slices(nft_address, parsed_msg.at(4)));
+
+        slice msg_body = parsed_msg.at(8);
+        throw_unless(99, msg_body~load_uint(32) == op::nft::transfer);
+
+    } else { ;; but if it's not owner we must chill
+        throw_unless(99, stack.first() == 1);
+    }
+
+    return gas_used;
+}
+
+int __test_cancel_sale(){
+    return test_cancel_sale(owner_address);
+}
+
+
+int __test_fail_cancel_sale(){
+    return test_cancel_sale(generate_any_address(1));
 }
