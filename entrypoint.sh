@@ -2,6 +2,7 @@
 
 echo "node_modules" >> .gitignore
 
+git config --global --add safe.directory /github/workspace
 git config --global user.name "dApp builder"
 git config --global user.email "username@users.noreply.github.com"
 git config --global init.defaultBranch gh-pages
