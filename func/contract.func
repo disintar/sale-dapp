@@ -144,7 +144,6 @@
         if (equal_slices(message_from, deployer_address)) {
             ~strdump_safe("Process message from deployer");
 
-            ;; Here we can buy NFT or change settings
             int op = in_msg_body~load_uint(32);
 
             ;; TODO: add text commands

@@ -366,7 +366,7 @@ int test_cancel_sale(slice address) impure inline {
         throw_unless(99, msg_body~load_uint(32) == op::nft::transfer);
 
     } else { ;; but if it's not owner we must chill
-        throw_unless(99, stack.first() == 1);
+        throw_unless(100, stack.first() == 1);
     }
 
     return gas_used;

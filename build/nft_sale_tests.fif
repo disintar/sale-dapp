@@ -610,6 +610,7 @@ PROGRAM{
     ZERO ROTREV
     }> PUSHCONT
     <{
+    ACCEPT
     compute-gas-used
     ROT DROP NIL
     }> PUSHCONT
@@ -658,6 +659,7 @@ PROGRAM{
     ZERO ROTREV
     }> PUSHCONT
     <{
+    ACCEPT
     compute-gas-used
     ROT DROP NIL
     }> PUSHCONT
@@ -3610,6 +3612,7 @@ PROGRAM{
     ZERO ROTREV
     }> PUSHCONT
     <{
+    ACCEPT
     compute-gas-used
     ROT DROP NIL
     }> PUSHCONT
@@ -3859,7 +3862,7 @@ PROGRAM{
       SWAP	//  gas_used stack
       FIRST	//  gas_used _97
       1 EQINT	//  gas_used _99
-      99 THROWIFNOT
+      100 THROWIFNOT
     }>
   }>
   __test_cancel_sale PROC:<{
