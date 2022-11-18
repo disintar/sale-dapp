@@ -92,6 +92,7 @@ PROGRAM{
   DECLPROC generate_ownership_assigned
   DECLPROC __test_init
   DECLPROC __test_init_not_our_owner
+  DECLPROC __test_fail
   DECLPROC __test_try_to_buy
   DECLPROC __test_try_to_buy_no_funds
   DECLPROC __test_try_to_not_from_this_wc
@@ -3426,6 +3427,11 @@ PROGRAM{
     SDEQ	//  gas_used_3 gas_used_4 _136
     105 THROWIFNOT
     PAIR	//  _138
+  }>
+  __test_fail PROC:<{
+    // 
+    228 THROW
+    0 PUSHINT	//  _2=0
   }>
   __test_try_to_buy PROC:<{
     // 
