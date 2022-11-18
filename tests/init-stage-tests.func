@@ -172,3 +172,5 @@ builder generate_ownership_assigned(slice prev_owner){
 
     return [gas_used_3, gas_used_4];
 }
+
+__te

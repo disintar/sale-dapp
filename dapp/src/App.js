@@ -2,6 +2,24 @@ import React, {Component} from 'react'
 import './App.css';
 
 
+function dec2hex(str) {
+    if (str) {
+        let dec = str.split(''), sum = [], hex = [], i, s
+        while (dec.length) {
+            s = 1 * dec.shift()
+            for (i = 0; s || i < sum.length; i++) {
+                s += (sum[i] || 0) * 10
+                sum[i] = s % 16
+                s = (s - sum[i]) / 16
+            }
+        }
+        while (sum.length) {
+            hex.push(sum.pop().toString(16))
+        }
+        return hex.join('')
+    }
+}
+
 export default class App extends Component {
     constructor(props) {
         super(props);
@@ -35,7 +53,6 @@ export default class App extends Component {
                 </div>
 
 
-
                 <div className="toncliInfo">
                     <div className={"toncliRow"}>
                         <div>
@@ -65,7 +82,7 @@ export default class App extends Component {
                             Code hash:
                         </div>
                         <div>
-                            {parseInt(this.state.code['code-hash']).toString(16)}
+                            {dec2hex(this.state.code['code-hash'])}
                         </div>
                     </div>
                 </div>
