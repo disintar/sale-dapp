@@ -1,5 +1,5 @@
 # Container image that runs your code
-FROM disintar/toncli-local:m1
+FROM disintar/toncli-local:slim
 
 ADD . /app
 WORKDIR /app
