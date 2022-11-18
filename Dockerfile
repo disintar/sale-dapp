@@ -1,8 +1,13 @@
 # Container image that runs your code
-FROM alpine:3.10
+FROM disintar/toncli-local:m1-slim
 
-# Copies your code file from your action repository to the filesystem path `/` of the container
-COPY entrypoint.sh /entrypoint.sh
+ADD . /app
+WORKDIR /app
+RUN toncli build && toncli run_tests
 
-# Code file to execute when the docker container starts up (`entrypoint.sh`)
-ENTRYPOINT ["/entrypoint.sh"]
+WORKDIR /app/dapp
+RUN npm ci && npm run build
+
+WORKDIR /app/dapp/build
+
+ENTRYPOINT ["/app/entrypoint.sh"]
