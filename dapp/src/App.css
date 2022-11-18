@@ -1,14 +1,45 @@
 .App {
-  text-align: center;
+    text-align: center;
 }
 
 .App-header {
-  background-color: #1F1F1F;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+    background-color: #1F1F1F;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+}
+
+.toncliInfo {
+    display: flex;
+    flex-direction: column;
+    width: 60vw;
+}
+
+.toncliRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px dashed;
+    font-size: 1.2rem;
+}
+
+.toncliRow:first-child {
+
+}
+
+.toncliRow div:nth-child(2) {
+    width: 40vw;
+    overflow: hidden;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.largeText {
+    font-size: 0.6rem;
 }
