@@ -1,16 +1,48 @@
 .App {
     text-align: center;
-}
-
-.App-header {
     background-color: #1F1F1F;
     min-height: 100vh;
+    font-size: 1.1rem;
+    padding: 0;
+    margin: 0;
+    color: white;
+}
+
+.App h1 {
+    margin: 0;
+    padding-top: 4rem;
+}
+
+.NastyMenu {
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    width: 60%;
+    margin: 0 auto;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 0;
+    cursor: pointer;
+}
+
+.NastyMenu li {
+    margin: 0 2rem;
+}
+
+.NastyMenu li:hover {
+    font-weight: bold;
+}
+
+.NastyMenu .active {
+    border-bottom: 1px dashed white;
+}
+
+
+.App-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
 }
 
 .toncliInfo {

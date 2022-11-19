@@ -1,0 +1,109 @@
+.SmartContractCreation {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.SmartContractCreation h3 {
+    text-align: left;
+    padding: 0;
+    margin: 3rem 0;
+}
+
+.SmartContractCreationSettings,
+.SmartContractCreationDisplay {
+    flex: 0.45
+}
+
+.SmartContractCreationSettingsRowTitle h4 {
+    text-align: left;
+    font-weight: bold;
+}
+
+.SmartContractCreationSettingsRowTitle h4 span {
+    font-weight: bold;
+    color: #FF7878;
+}
+
+
+.SmartContractCreationSettingsRowInput ul {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+    padding: 0;
+}
+
+.SmartContractCreationSettingsRowInput li {
+    margin: 0 1rem;
+    padding: 0;
+    cursor: pointer;
+}
+
+.SmartContractCreationSettingsRowInput .active {
+    border-bottom: 1px dashed;
+}
+
+.SmartContractCreationSettingsRowInput li:first-child {
+    margin: 0 1rem 0 0;
+}
+
+.SmartContractCreationSettingsRowInput input[type="text"] {
+    font-size: 0.85rem;
+    width: 100%;
+    background: #1F1F1F;
+    border: none;
+    border-bottom: 1px solid white;
+    margin: 0 0 2rem 0;
+    color: white;
+    padding-bottom: 0.5rem;
+}
+
+.TonExtensionStatus {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.greenDot {
+    background: #9579F0;
+    font-weight: bold;
+    display: block;
+    font-size: 1.4rem;
+    height: 8px;
+    width: 8px;
+    margin-right: 0.5rem;
+    border-radius: 4px;
+}
+
+.yellowDot {
+    background: #FF7878;
+    font-weight: bold;
+    display: block;
+    font-size: 1.4rem;
+    height: 8px;
+    width: 8px;
+    margin-right: 0.5rem;
+    border-radius: 4px;
+}
+
+.SmartContractCreationSettingsRowConfiguration {
+    margin: 0 0 2rem 0;
+}
+
+.hidden {
+    display: none;
+}
+
+.SmartContractCreationSettingsRow:nth-child(odd) {
+    border-right: 4px solid #FF7878;
+}
+
+.SmartContractCreationSettingsRow:nth-child(even) {
+    border-right: 4px solid #9579F0;
+}
+
+.SmartContractCreationSettingsRow {
+    padding: 0.5rem 1rem 0.5rem 0;
+    margin: 1rem 0;
+}

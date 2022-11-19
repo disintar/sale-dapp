@@ -1,22 +1,72 @@
 import React, {Component} from 'react'
-import './App.css';
+import './styles/App.css'
+import {dec2hex} from './utils/hex'
+import AppMenu from "./AppMenu";
 
 
-function dec2hex(str) {
-    if (str) {
-        let dec = str.split(''), sum = [], hex = [], i, s
-        while (dec.length) {
-            s = 1 * dec.shift()
-            for (i = 0; s || i < sum.length; i++) {
-                s += (sum[i] || 0) * 10
-                sum[i] = s % 16
-                s = (s - sum[i]) / 16
-            }
-        }
-        while (sum.length) {
-            hex.push(sum.pop().toString(16))
-        }
-        return hex.join('')
+class ToncliAppDescription extends Component {
+    render() {
+        const compile_date = new Date(parseInt(this.props.code['date']) * 1000);
+
+
+        return <div className="App-header"><p>Toncli build info</p>
+            <div className="toncliInfo">
+                <div className={"toncliRow"}>
+                    <div>
+                        Compile date:
+                    </div>
+                    <div>
+                        {compile_date.toString()}
+                    </div>
+                </div>
+            </div>
+
+
+            <div className="toncliInfo">
+                <div className={"toncliRow"}>
+                    <div>
+                        Func version:
+                    </div>
+                    <div>
+                        {this.props.code['func-version']}
+                    </div>
+                </div>
+            </div>
+
+            <div className="toncliInfo">
+                <div className={"toncliRow"}>
+                    <div>
+                        Fift version:
+                    </div>
+                    <div>
+                        {this.props.code['fift-version']}
+                    </div>
+                </div>
+            </div>
+
+
+            <div className="toncliInfo">
+                <div className={"toncliRow"}>
+                    <div>
+                        Code hash:
+                    </div>
+                    <div>
+                        {dec2hex(this.props.code['code-hash'])}
+                    </div>
+                </div>
+            </div>
+
+            <div className="toncliInfo">
+                <div className={"toncliRow"}>
+                    <div>
+                        Code:
+                    </div>
+                    <div className={"largeText"}>
+                        {this.props.code.code}
+                    </div>
+                </div>
+            </div>
+        </div>
     }
 }
 
@@ -24,80 +74,67 @@ export default class App extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {code: {}}
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('stage')) {
+            this.updateLocation('mode', 'app');
+        }
+
+        this.state = {
+            code: {},
+            mode: params.get('mode') ? params.get('mode') : null
+        }
     }
 
     componentDidMount() {
-        fetch(window.location.toString() + "/nft_sale.json").then(x => x.json()).then(x => {
+        fetch(`${window.location.origin}${window.location.pathname}` + "/nft_sale.json").then(x => x.json()).then(x => {
             this.setState({code: x});
         })
     }
 
+    updateLocation = (key, new_value) => {
+        const params = new URLSearchParams(window.location.search);
+        const all_keys = Array.from(params.keys());
+
+        if (!params.get(key)) {
+            all_keys.push(key)
+        }
+
+        const final_string = all_keys.reduce((accumulator, currentValue) => {
+                let item;
+                if (currentValue === key) {
+                    item = `${key}=${new_value}`
+                } else {
+                    item = `${currentValue}=${params.get(currentValue)}`
+                }
+
+                if (accumulator === '?') {
+                    return `${accumulator}${item}`
+                } else {
+                    return `${accumulator}&${item}`
+                }
+            }, '?')
+
+        window.location = `${window.location.origin}${window.location.pathname}${final_string}`
+    }
+
     render() {
-        const compile_date = new Date(parseInt(this.state.code['date']) * 1000);
 
         return <div className="App">
-            <header className="App-header">
-                <p>Toncli build info for <b>{this.state.code["contract-name"]}</b></p>
+            <h1>Ultimate NFT sale toncli dApp</h1>
+            <ul className={"NastyMenu"}>
+                <li className={this.state.mode === 'app' ? "active" : null}
+                    onClick={() => this.updateLocation('mode', 'app')}>🎮 App
+                </li>
+                <li className={this.state.mode === 'description' ? "active" : null}
+                    onClick={() => this.updateLocation('mode', 'description')}>🏗 Build info
+                </li>
+                <li className={this.state.mode === 'wtf' ? "active" : null}
+                    onClick={() => this.updateLocation('mode', "wtf")}>🤯 What's is going on
+                </li>
+            </ul>
 
-
-                <div className="toncliInfo">
-                    <div className={"toncliRow"}>
-                        <div>
-                            Compile date:
-                        </div>
-                        <div>
-                            {compile_date.toString()}
-                        </div>
-                    </div>
-                </div>
-
-
-                <div className="toncliInfo">
-                    <div className={"toncliRow"}>
-                        <div>
-                            Func version:
-                        </div>
-                        <div>
-                            {this.state.code['func-version']}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="toncliInfo">
-                    <div className={"toncliRow"}>
-                        <div>
-                            Fift version:
-                        </div>
-                        <div>
-                            {this.state.code['fift-version']}
-                        </div>
-                    </div>
-                </div>
-
-
-                <div className="toncliInfo">
-                    <div className={"toncliRow"}>
-                        <div>
-                            Code hash:
-                        </div>
-                        <div>
-                            {dec2hex(this.state.code['code-hash'])}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="toncliInfo">
-                    <div className={"toncliRow"}>
-                        <div>
-                            Code:
-                        </div>
-                        <div className={"largeText"}>
-                            {this.state.code.code}
-                        </div>
-                    </div>
-                </div>
-            </header>
+            {this.state.mode === 'description' ? <ToncliAppDescription code={this.state.code}/> : null}
+            {this.state.mode === 'app' ? <AppMenu/> : null}
         </div>
     }
 }

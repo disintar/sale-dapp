@@ -1,0 +1,44 @@
+.AppMenu{
+    width: 900px;
+    margin: 0 auto;
+}
+
+.AppMenuCards {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.AppMenuCard {
+    border: 1px solid white;
+    border-radius: 8px;
+    height: 300px;
+    width: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin: 0 2rem;
+}
+
+.AppMenuCardIcon {
+    font-size: 5rem;
+    padding: 0;
+    margin: 0;
+}
+
+.AppMenuCard:hover {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.AppMenuBackButton {
+    font-size: 1.1rem;
+    width: fit-content;
+}
+
+.AppMenuBackButton:hover {
+    cursor: pointer;
+    border-bottom: 1px dashed white;
+}
