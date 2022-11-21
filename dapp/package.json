@@ -7,24 +7,27 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "buffer": "^6.0.3",
-    "crypto": "^1.0.1",
-    "react-scripts": "5.0.1",
+    "crypto": "npm:crypto-browserify@3.12.0",
     "qr-code-styling": "^1.6.0-rc.1",
-    "ton-x": "^2.0.0",
-    "util": "^0.12.5",
+    "react": "^18.2.0",
+    "react-app-rewired": "^2.2.1",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "safe-buffer": "^5.2.1",
+    "stream": "npm:stream-browserify@3.0.0",
     "teslabot": "^1.5.0",
+    "ton-x": "^2.0.0",
     "ton3-core": "^0.0.19",
+    "util": "npm:util@0.12.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "start": "GENERATE_SOURCEMAP=false react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false react-scripts build",
-    "test": "GENERATE_SOURCEMAP=false react-scripts test",
+    "start": "GENERATE_SOURCEMAP=false react-app-rewired start",
+    "build": "GENERATE_SOURCEMAP=false react-app-rewired build",
+    "test": "GENERATE_SOURCEMAP=false react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -46,6 +49,7 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^4.0.0"
+    "gh-pages": "^4.0.0",
+    "process": "^0.11.10"
   }
 }

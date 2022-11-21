@@ -3,7 +3,6 @@ import './styles/App.css'
 import {dec2hex} from './utils/hex'
 import AppMenu from "./AppMenu";
 
-
 class ToncliAppDescription extends Component {
     render() {
         const compile_date = new Date(parseInt(this.props.code['date']) * 1000);
@@ -73,6 +72,7 @@ class ToncliAppDescription extends Component {
 export default class App extends Component {
     constructor(props) {
         super(props);
+
 
         const params = new URLSearchParams(window.location.search);
         if (!params.get('stage')) {

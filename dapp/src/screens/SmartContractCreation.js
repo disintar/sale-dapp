@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import '../styles/SmartContractCreation.css';
 import {ton_icon} from "../icons";
+import {Buffer} from 'buffer';
 import {Address, Builder, Coins} from 'ton3-core'
 import QRCodeStyling from "qr-code-styling";
 import {TonhubConnector} from 'ton-x';
@@ -238,7 +239,6 @@ export default class SmartContractCreation extends Component {
 
                 connector.awaitSessionReady(session.id, 5 * 60 * 1000).then((sessionConfirmed) => {
                     if (sessionConfirmed.state === 'ready') {
-                        const walletConfig = sessionConfirmed.wallet;
                         console.log(sessionConfirmed);
                         // const correctConfig = TonhubConnector.verifyWalletConfig(session.id, sessionConfirmed.wallet);
                         // console.log(correctConfig);
