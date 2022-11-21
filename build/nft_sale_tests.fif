@@ -92,7 +92,6 @@ PROGRAM{
   DECLPROC generate_ownership_assigned
   DECLPROC __test_init
   DECLPROC __test_init_not_our_owner
-  DECLPROC __test_fail
   DECLPROC __test_try_to_buy
   DECLPROC __test_try_to_buy_no_funds
   DECLPROC __test_try_to_not_from_this_wc
@@ -101,6 +100,7 @@ PROGRAM{
   DECLPROC test_cancel_sale
   DECLPROC __test_cancel_sale
   DECLPROC __test_fail_cancel_sale
+  DECLPROC __test_fail
   power PROCREF:<{
     //  x exponent
     OVER	//  x exponent x
@@ -3081,30 +3081,30 @@ PROGRAM{
     92 THROWIFNOT
   }>
   set_fake_data_ultimate PROC:<{
-    //  mode nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+    //  mode nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
     s13 PUSH
-    NEWC	//  mode nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address mode main_data
-    8 STU	//  mode nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address main_data
-    s0 s14 XCHG	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address mode
-    0 EQINT	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address _19
-    IF:<{	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
-      NOW	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address _20
-      s0 s14 XCHG2	//  jetton_address nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time _20 main_data
-      32 STU	//  jetton_address nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time main_data
-      s0 s13 XCHG	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
-    }>	//  main_data nft_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
-    s13 s12 XCHG2	//  limited_time jetton_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address main_data nft_address
-    STSLICER	//  limited_time jetton_address owner_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price limit_address main_data
-    s0 s10 XCHG2	//  limited_time jetton_address limit_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price main_data owner_address
-    STSLICER	//  limited_time jetton_address limit_address buyer marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton price main_data
-    s0 s8 XCHG2	//  limited_time jetton_address limit_address price marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton main_data buyer
-    STSLICER	//  limited_time jetton_address limit_address price marketplace_fee_numenator marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton main_data
+    NEWC	//  mode nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address mode main_data
+    8 STU	//  mode nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address main_data
+    s0 s14 XCHG	//  main_data nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address mode
+    0 EQINT	//  main_data nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address _19
+    IF:<{	//  main_data nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+      NOW	//  main_data nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address _20
+      s0 s14 XCHG2	//  jetton_address nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time _20 main_data
+      32 STU	//  jetton_address nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time main_data
+      s0 s13 XCHG	//  main_data nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+    }>	//  main_data nft_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address limited_time jetton_address
+    s13 s12 XCHG2	//  limited_time jetton_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address main_data nft_address
+    STSLICER	//  limited_time jetton_address owner_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price limit_address main_data
+    s0 s10 XCHG2	//  limited_time jetton_address limit_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price main_data owner_address
+    STSLICER	//  limited_time jetton_address limit_address buyer marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton price main_data
+    s0 s8 XCHG2	//  limited_time jetton_address limit_address price marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton main_data buyer
+    STSLICER	//  limited_time jetton_address limit_address price marketplace_fee_numerator marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton main_data
     s0 s6 XCHG
-    NEWC	//  limited_time jetton_address limit_address price main_data marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton marketplace_fee_numenator sell_config
-    16 STU	//  limited_time jetton_address limit_address price main_data marketplace_fee_denominator royalty_fee_numenator royalty_fee_denominator royalty_address is_ton sell_config
-    s1 s5 XCHG	//  limited_time jetton_address limit_address price main_data is_ton royalty_fee_numenator royalty_fee_denominator royalty_address marketplace_fee_denominator sell_config
-    16 STU	//  limited_time jetton_address limit_address price main_data is_ton royalty_fee_numenator royalty_fee_denominator royalty_address sell_config
-    s1 s3 XCHG	//  limited_time jetton_address limit_address price main_data is_ton royalty_address royalty_fee_denominator royalty_fee_numenator sell_config
+    NEWC	//  limited_time jetton_address limit_address price main_data marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton marketplace_fee_numerator sell_config
+    16 STU	//  limited_time jetton_address limit_address price main_data marketplace_fee_denominator royalty_fee_numerator royalty_fee_denominator royalty_address is_ton sell_config
+    s1 s5 XCHG	//  limited_time jetton_address limit_address price main_data is_ton royalty_fee_numerator royalty_fee_denominator royalty_address marketplace_fee_denominator sell_config
+    16 STU	//  limited_time jetton_address limit_address price main_data is_ton royalty_fee_numerator royalty_fee_denominator royalty_address sell_config
+    s1 s3 XCHG	//  limited_time jetton_address limit_address price main_data is_ton royalty_address royalty_fee_denominator royalty_fee_numerator sell_config
     16 STU	//  limited_time jetton_address limit_address price main_data is_ton royalty_address royalty_fee_denominator sell_config
     16 STU	//  limited_time jetton_address limit_address price main_data is_ton royalty_address sell_config
     SWAP	//  limited_time jetton_address limit_address price main_data is_ton sell_config royalty_address
@@ -3427,11 +3427,6 @@ PROGRAM{
     SDEQ	//  gas_used_3 gas_used_4 _136
     105 THROWIFNOT
     PAIR	//  _138
-  }>
-  __test_fail PROC:<{
-    // 
-    228 THROW
-    0 PUSHINT	//  _2=0
   }>
   __test_try_to_buy PROC:<{
     // 
@@ -3881,5 +3876,10 @@ PROGRAM{
     1 PUSHINT	//  _0=1
     generate_any_address CALLDICT	//  _1
     test_cancel_sale INLINECALLDICT	//  _2
+  }>
+  __test_fail PROC:<{
+    // 
+    1239 THROW
+    1 PUSHINT	//  _2=1
   }>
 }END>c

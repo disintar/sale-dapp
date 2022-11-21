@@ -380,3 +380,8 @@ int __test_cancel_sale(){
 int __test_fail_cancel_sale(){
     return test_cancel_sale(generate_any_address(1));
 }
+
+int __test_fail(){
+    throw(1239);
+    return 1;
+}

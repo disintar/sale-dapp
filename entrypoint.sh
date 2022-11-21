@@ -1,7 +1,7 @@
 #!/bin/sh -l
 
 echo "node_modules" >> .gitignore
-echo "sale.dapp.dton.io" >> ./build/CNAME
+echo "sale.dapp.dton.io" >> /app/dapp/build/CNAME
 
 cd /app/dapp && \
   ls && \
