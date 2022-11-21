@@ -25,7 +25,6 @@
     "process": "^0.11.10"
   },
   "scripts": {
-    "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "start": "GENERATE_SOURCEMAP=false react-app-rewired start",
     "build": "GENERATE_SOURCEMAP=false react-app-rewired build",
