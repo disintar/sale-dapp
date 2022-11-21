@@ -10,6 +10,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
+    "ton3-core": "^0.0.19",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -37,6 +38,8 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^4.0.0"
+    "crypto": "^1.0.1",
+    "gh-pages": "^4.0.0",
+    "util": "^0.12.5"
   }
 }

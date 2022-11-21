@@ -12,12 +12,17 @@
 
 .SmartContractCreationSettings,
 .SmartContractCreationDisplay {
-    flex: 0.45
+    flex: 0.45;
+    margin-bottom: 3rem;
+    width: 45%;
+    word-break: break-all;
 }
 
 .SmartContractCreationSettingsRowTitle h4 {
     text-align: left;
     font-weight: bold;
+    margin-top: 0.3rem;
+    margin-bottom: 2rem;
 }
 
 .SmartContractCreationSettingsRowTitle h4 span {
@@ -32,6 +37,7 @@
     flex-direction: row;
     margin: 0;
     padding: 0;
+    width: 100%;
 }
 
 .SmartContractCreationSettingsRowInput li {
@@ -57,6 +63,30 @@
     margin: 0 0 2rem 0;
     color: white;
     padding-bottom: 0.5rem;
+}
+
+.SmartContractCreationSettingsRowInput input[type="number"] {
+    background: #1F1F1F;
+    border: none;
+    border-bottom: 1px solid white;
+    color: white;
+    flex-wrap: wrap;
+    flex-direction: row;
+    width: 41%;
+    margin: 1rem 0 0 0;
+    padding: 0;
+    font-size: 1.1rem;
+}
+
+.SmartContractCreationSettingsRowInput {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.SmartContractCreationSettingsRowInput label {
+    width: 40%;
+    text-align: left;
 }
 
 .TonExtensionStatus {
@@ -106,4 +136,8 @@
 .SmartContractCreationSettingsRow {
     padding: 0.5rem 1rem 0.5rem 0;
     margin: 1rem 0;
+}
+
+.SmartContractCreationCellDisplay{
+    text-align: left;
 }
