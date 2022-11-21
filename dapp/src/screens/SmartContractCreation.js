@@ -1,7 +1,6 @@
 import React, {Component} from 'react'
 import '../styles/SmartContractCreation.css';
 import {ton_icon} from "../icons";
-import {Buffer} from 'buffer';
 import {Address, Builder, Coins} from 'ton3-core'
 import QRCodeStyling from "qr-code-styling";
 import {TonhubConnector} from 'ton-x';
