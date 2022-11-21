@@ -11,4 +11,6 @@ RUN npm ci && npm run build
 
 WORKDIR /app/dapp/build
 
+
+
 ENTRYPOINT ["/app/entrypoint.sh"]

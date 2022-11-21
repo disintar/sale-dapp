@@ -1,9 +1,9 @@
 #!/bin/sh -l
 
 echo "node_modules" >> .gitignore
-echo "sale.dapp.dton.io" >> CNAME
+echo "sale.dapp.dton.io" >> ./build/CNAME
 
-cd /app/dapp/build && \
+cd /app/dapp && \
   ls && \
   git config --global --add safe.directory /github/workspace  && \
   git config --global user.name "dApp builder"  && \
