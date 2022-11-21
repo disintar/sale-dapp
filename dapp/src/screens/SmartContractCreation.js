@@ -31,6 +31,11 @@ export default class SmartContractCreation extends Component {
             limitAddress: '',
             limitedTime: 0,
             jettonCollectionAddress: '',
+            jettonCollectionMintNew: false,
+
+            wallet: 'Wallet',
+            isLoggedIn: false,
+
             loadTime: Date.now()
         }
 
@@ -39,18 +44,26 @@ export default class SmartContractCreation extends Component {
 
     componentDidMount() {
         setTimeout(() => {
-            this.provider = window.ton
-
-            if (this.provider.isTonWallet) {
-                this.provider.send('ton_requestAccounts').then(x => {
-                    this.setState({
-                        ownerAddress: x[0]
-                    })
-                })
-
-            }
-            this.forceUpdate()
+            this.loadTonWallet()
         }, 1000)
+
+    }
+
+    loadTonWallet = () => {
+        this.provider = window.ton
+
+        if (this.provider.isTonWallet) {
+            this.provider.send('ton_requestAccounts').then(x => {
+                this.setState({
+                    ownerAddress: x[0],
+                    wallet: 'TON Extension',
+                    isLoggedIn: true
+                })
+            })
+
+        }
+
+        this.forceUpdate()
     }
 
     onChange = (item) => {
@@ -142,24 +155,77 @@ export default class SmartContractCreation extends Component {
         </div>
     }
 
+    displaySteps = () => {
+        let steps = [];
+
+        if (this.state.mintNewNft) {
+            steps.push('Mint NFT')
+        }
+
+        if (this.state.jettonCollectionMintNew) {
+            steps.push('Mint Jetton')
+        }
+
+        steps.push('Mint contract')
+
+        if (this.state.initMode === 0) {
+            steps.push('Transfer NFT')
+        }
+
+        return <div className={"SmartContractCreationSteps"}>
+            <h3>{steps.length} steps to do:</h3>
+
+            <ul>
+                {steps.map((x, i) => {
+                    return <li>{i}. {x}</li>
+                })}
+            </ul>
+        </div>
+    }
+
     render() {
         const dataCell = this.buildCell()
 
         return <div>
             <div className={"TonExtensionStatus"}>
-                {this.provider.isTonWallet ?
+                {this.state.isLoggedIn ?
                     <>
                         <span className={"greenDot"}/>
-                        <p>TON Extension initialized</p>
+                        <p>{this.state.wallet} loaded</p>
                     </> :
                     <>
                         <span className={"yellowDot"}/>
-                        <p>TON Extension was not founded</p>
+                        <p>{this.state.wallet} unloaded</p>
                     </>}
             </div>
 
             <div className="SmartContractCreation">
                 <div className={"SmartContractCreationSettings"}>
+                    <div className={"SmartContractCreationSettingsRowConfiguration"}>
+                        <div className={"SmartContractCreationSettingsRowInput"}>
+                            <ul>
+                                <li className={this.state.wallet === 'TON Extension' ? 'active' : null}
+                                    onClick={this.loadTonWallet}>TON Extension
+                                </li>
+                                <li className={this.state.wallet === 'TonKeeper' ? 'active' : null}
+                                    onClick={() => this.setState({
+                                        wallet: 'TonKeeper',
+                                        isLoggedIn: false,
+                                        ownerAddress: ''
+                                    })}>TonKeeper
+                                </li>
+                                <li className={this.state.wallet === 'TonHub' ? 'active' : null}
+                                    onClick={() => this.setState({
+                                        wallet: 'TonHub',
+                                        isLoggedIn: false,
+                                        ownerAddress: ''
+                                    })}>TonHub
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+
                     <h3>Data configuration</h3>
 
                     <div className={"SmartContractCreationSettingsRowConfiguration"}>
@@ -241,7 +307,7 @@ export default class SmartContractCreation extends Component {
                         </div>
 
                         <div className={"SmartContractCreationSettingsRowInput"}>
-                            <input name={'buyerAddress'} value={this.state.buyerAddress} onChange={this.onChange}
+                            <input name={'limitAddress'} value={this.state.limitAddress} onChange={this.onChange}
                                    placeholder={"NFT buyer address goes here"} type={'text'}/>
                         </div>
                     </div>
@@ -325,17 +391,30 @@ export default class SmartContractCreation extends Component {
                         </div>
 
                         <div className={"SmartContractCreationSettingsRowInput"}>
-                            <input name={'jettonCollectionAddress'} onChange={this.onChange}
-                                   value={this.state.jettonCollectionAddress}
-                                   placeholder={"Jetton address goes here"}
-                                   type={'text'}/>
+                            {!this.state.jettonCollectionMintNew ?
+                                <input name={'jettonCollectionAddress'} onChange={this.onChange}
+                                       value={this.state.jettonCollectionAddress}
+                                       placeholder={"Jetton address goes here"}
+                                       type={'text'}/> : ''}
 
                             <ul>
                                 <li className={this.state.jettonCollectionAddress === "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE" ? 'active' : null}
-                                    onClick={() => this.setState({jettonCollectionAddress: "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE"})}>Scale
+                                    onClick={() => this.setState({
+                                        jettonCollectionAddress: "EQBlqsm144Dq6SjbPI4jjZvA1hqTIP3CvHovbIfW_t-SCALE",
+                                        jettonCollectionMintNew: false
+                                    })}>Scale
                                 </li>
                                 <li className={this.state.jettonCollectionAddress === "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw" ? 'active' : null}
-                                    onClick={() => this.setState({jettonCollectionAddress: "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw"})}>Bolt
+                                    onClick={() => this.setState({
+                                        jettonCollectionAddress: "EQD0vdSA_NedR9uvbgN9EikRX-suesDxGeFg69XQMavfLqIw",
+                                        jettonCollectionMintNew: false
+                                    })}>Bolt
+                                </li>
+                                <li className={this.state.jettonCollectionMintNew ? 'active' : null}
+                                    onClick={() => this.setState({
+                                        jettonCollectionAddress: "",
+                                        jettonCollectionMintNew: true
+                                    })}>Mint random new
                                 </li>
                             </ul>
                         </div>
@@ -386,9 +465,12 @@ export default class SmartContractCreation extends Component {
                 </div>
 
                 <div className={"SmartContractCreationDisplay"}>
-                    <h3>Your data cell</h3>
+                    {this.displaySteps()}
 
+                    <h3>Your data cell</h3>
                     {this.displayCell(dataCell)}
+
+                    <a className={"button"}>Deploy smart contract</a>
                 </div>
             </div>
         </div>

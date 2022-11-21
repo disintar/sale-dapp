@@ -120,10 +120,10 @@ export default class App extends Component {
     render() {
 
         return <div className="App">
-            <h1>Ultimate NFT sale toncli dApp</h1>
+            <h1>dApp: NFT sale</h1>
             <ul className={"NastyMenu"}>
                 <li className={this.state.mode === 'app' ? "active" : null}
-                    onClick={() => this.updateLocation('mode', 'app')}>🎮 App
+                    onClick={() => this.updateLocation('mode', 'app')}>🎮 dApp
                 </li>
                 <li className={this.state.mode === 'description' ? "active" : null}
                     onClick={() => this.updateLocation('mode', 'description')}>🏗 Build info
@@ -135,6 +135,17 @@ export default class App extends Component {
 
             {this.state.mode === 'description' ? <ToncliAppDescription code={this.state.code}/> : null}
             {this.state.mode === 'app' ? <AppMenu/> : null}
+
+            <div style={{
+                width: "900px",
+                margin: "2rem auto",
+                borderTop: "3px solid #242424",
+                color: "white",
+                textAlign: "center",
+                paddingBottom: "3rem"
+            }}>
+                <p>©2022 Disintar LLP</p>
+            </div>
         </div>
     }
 }
