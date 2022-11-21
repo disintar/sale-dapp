@@ -9,14 +9,22 @@
     "@testing-library/user-event": "^13.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "buffer": "^6.0.3",
+    "crypto": "^1.0.1",
     "react-scripts": "5.0.1",
+    "qr-code-styling": "^1.6.0-rc.1",
+    "ton-x": "^2.0.0",
+    "util": "^0.12.5",
+    "teslabot": "^1.5.0",
     "ton3-core": "^0.0.19",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "start": "GENERATE_SOURCEMAP=false react-scripts start",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "test": "GENERATE_SOURCEMAP=false react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -38,8 +46,6 @@
     ]
   },
   "devDependencies": {
-    "crypto": "^1.0.1",
-    "gh-pages": "^4.0.0",
-    "util": "^0.12.5"
+    "gh-pages": "^4.0.0"
   }
 }

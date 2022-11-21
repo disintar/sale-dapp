@@ -11,6 +11,4 @@ cd /app/dapp/build && \
   git config --global init.defaultBranch gh-pages  && \
   git init && \
   git remote add origin https://tvorogme:${1}@github.com/disintar/sale-dapp.git && \
-  git add * && \
-  git commit -a -m "Update dApp" && \
-  git push --force origin gh-pages
+  npm run deploy -- -m "Deploy React app to GitHub Pages"

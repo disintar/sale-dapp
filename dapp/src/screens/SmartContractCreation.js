@@ -2,6 +2,8 @@ import React, {Component} from 'react'
 import '../styles/SmartContractCreation.css';
 import {ton_icon} from "../icons";
 import {Address, Builder, Coins} from 'ton3-core'
+import QRCodeStyling from "qr-code-styling";
+import {TonhubConnector} from 'ton-x';
 
 export default class SmartContractCreation extends Component {
     constructor(props) {
@@ -36,10 +38,18 @@ export default class SmartContractCreation extends Component {
             wallet: 'Wallet',
             isLoggedIn: false,
 
-            loadTime: Date.now()
+            loadTime: Date.now(),
+
+
+            showTonHubPopup: false,
+            showTonKeeperPopup: false,
+            tonHubSessionLink: ''
         }
 
         this.provider = {};
+        this.tonhubconnector = new TonhubConnector();
+
+        this.qrGoesHere = new React.createRef();
     }
 
     componentDidMount() {
@@ -183,10 +193,79 @@ export default class SmartContractCreation extends Component {
         </div>
     }
 
+    loginTonHub = () => {
+        this.setState({
+            showTonHubPopup: true,
+            wallet: 'TonHub',
+            isLoggedIn: false,
+            ownerAddress: ''
+        }, () => {
+            const connector = new TonhubConnector({network: 'mainnet'});
+            connector.createNewSession({
+                name: 'Disintar',
+                url: 'https://beta.disintar.io'
+            }).then((session) => {
+                this.setState({
+                    session: session
+                })
+
+                const qrCode = new QRCodeStyling({
+                    width: 250,
+                    height: 250,
+                    margin: 10,
+                    image: "",
+                    data: session.link,
+                    dotsOptions: {
+                        color: "white",
+                        type: "rounded",
+                    },
+                    imageOptions: {
+                        crossOrigin: "anonymous",
+                        margin: 10,
+                    },
+                    backgroundOptions: {
+                        color: "#242424"
+                    },
+                    cornersSquareOptions: {
+                        color: "white",
+                    },
+                })
+
+                if (this.qrGoesHere.current) {
+                    this.qrGoesHere.current.innerHTML = ''
+                    qrCode.append(this.qrGoesHere.current)
+                }
+
+                connector.awaitSessionReady(session.id, 5 * 60 * 1000).then((sessionConfirmed) => {
+                    if (sessionConfirmed.state === 'ready') {
+                        const walletConfig = sessionConfirmed.wallet;
+                        console.log(sessionConfirmed);
+                        // const correctConfig = TonhubConnector.verifyWalletConfig(session.id, sessionConfirmed.wallet);
+                        // console.log(correctConfig);
+
+                    } else {
+                        throw new Error('Impossible');
+                    }
+                })
+            })
+
+        })
+    }
+
+    getTonHubLogin = () => {
+        return <div className={"PopupItem"}>
+            <h3>Login with TonHub</h3>
+            <div className={"QrCode"} ref={this.qrGoesHere}/>
+        </div>
+    }
+
     render() {
         const dataCell = this.buildCell()
 
         return <div>
+
+            {this.state.showTonHubPopup ? this.getTonHubLogin() : null}
+
             <div className={"TonExtensionStatus"}>
                 {this.state.isLoggedIn ?
                     <>
@@ -215,11 +294,7 @@ export default class SmartContractCreation extends Component {
                                     })}>TonKeeper
                                 </li>
                                 <li className={this.state.wallet === 'TonHub' ? 'active' : null}
-                                    onClick={() => this.setState({
-                                        wallet: 'TonHub',
-                                        isLoggedIn: false,
-                                        ownerAddress: ''
-                                    })}>TonHub
+                                    onClick={this.loginTonHub}>TonHub
                                 </li>
                             </ul>
                         </div>

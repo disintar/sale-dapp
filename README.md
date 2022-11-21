@@ -8,19 +8,20 @@
 
 ## Features
 
-| Feature                                                                          | Status |
-|----------------------------------------------------------------------------------|--------|
-| Serverless dApp (dton api only for search NFT & royalty, can be used without it) | ✅      |
-| No special roles or SETCODE in smart contract                                    | ✅      |
-| Frontend is only on client                                                       | ✅      |
-| 100% OpenSource code                                                             | 🫡     |
-| Less fee for configuration & new idea of sale contracts                          | ✅      |
-| Jetton Sale                                                                      |        |
-| Indexing by main marketplaces and explorers                                      |        |
-| Toncli 100% functional unit tests                                                |        |
-| Auto test and deploy thru Github Actions                                         | ✅      |
-| Access thru Github Sites                                                         | ✅      |
-| Can be used by other developers as template for dApp                             | ✅      |
+| Feature                                                                                                       | Status |
+|---------------------------------------------------------------------------------------------------------------|--------|
+| Serverless dApp (dton api only for search NFT & royalty & jetton address calculation, can be used without it) | ✅      |
+| No special roles or SETCODE in smart contract                                                                 | ✅      |
+| Frontend is only on client                                                                                    | ✅      |
+| 100% OpenSource code                                                                                          | 🫡     |
+| Less fee for configuration & new idea of sale contracts                                                       | ✅      |
+| Jetton Sale                                                                                                   |        |
+| Indexing by main marketplaces and explorers                                                                   |        |
+| Toncli 100% functional unit tests                                                                             |        |
+| Auto test and deploy thru Github Actions                                                                      | ✅      |
+| Access thru Github Sites                                                                                      | ✅      |
+| Can be used by other developers as template for dApp                                                          | ✅      |
+| Merkle proofs on data from DTON                                                                               | TBD    |
 
 
 ## Toncli devs

@@ -100,19 +100,19 @@ export default class App extends Component {
         }
 
         const final_string = all_keys.reduce((accumulator, currentValue) => {
-                let item;
-                if (currentValue === key) {
-                    item = `${key}=${new_value}`
-                } else {
-                    item = `${currentValue}=${params.get(currentValue)}`
-                }
+            let item;
+            if (currentValue === key) {
+                item = `${key}=${new_value}`
+            } else {
+                item = `${currentValue}=${params.get(currentValue)}`
+            }
 
-                if (accumulator === '?') {
-                    return `${accumulator}${item}`
-                } else {
-                    return `${accumulator}&${item}`
-                }
-            }, '?')
+            if (accumulator === '?') {
+                return `${accumulator}${item}`
+            } else {
+                return `${accumulator}&${item}`
+            }
+        }, '?')
 
         window.location = `${window.location.origin}${window.location.pathname}${final_string}`
     }
@@ -138,11 +138,11 @@ export default class App extends Component {
 
             <div style={{
                 width: "900px",
-                margin: "2rem auto",
+                margin: "3rem auto 0 auto",
                 borderTop: "3px solid #242424",
                 color: "white",
                 textAlign: "center",
-                paddingBottom: "3rem"
+                paddingBottom: "4rem"
             }}>
                 <p>©2022 Disintar LLP</p>
             </div>
