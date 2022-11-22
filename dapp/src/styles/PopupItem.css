@@ -1,0 +1,34 @@
+.PopupItem {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(31, 31, 31, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.PopupItemContent {
+    background: #1F1F1F;
+    padding: 2rem;
+}
+
+.PopupItem a:hover {
+    cursor: pointer;
+    border-bottom: 2px dashed white;
+}
+
+.PopupStepProcess {
+    text-align: left;
+}
+
+.PopupStepProcessItem{
+    display: flex;
+    justify-content: space-between;
+}
+
+.PopupStepProcessItemRight{
+    font-weight: bold;
+}

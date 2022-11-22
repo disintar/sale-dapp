@@ -1,9 +1,11 @@
 import React, {Component} from 'react'
 import '../styles/SmartContractCreation.css';
+import '../styles/PopupItem.css';
 import {ton_icon} from "../icons";
 import {Address, Builder, Coins} from 'ton3-core'
 import QRCodeStyling from "qr-code-styling";
 import {TonhubConnector} from 'ton-x';
+import DeployOrSend from "../popups/DeployOrSend";
 
 export default class SmartContractCreation extends Component {
     constructor(props) {
@@ -43,7 +45,12 @@ export default class SmartContractCreation extends Component {
 
             showTonHubPopup: false,
             showTonKeeperPopup: false,
-            tonHubSessionLink: ''
+            tonHubSessionLink: '',
+            tonHubAppPublicKey: '',
+            tonHubSessionSeed: '',
+            tonHubAppEndpoint: '',
+
+            deploy: false
         }
 
         this.provider = {};
@@ -165,8 +172,8 @@ export default class SmartContractCreation extends Component {
         </div>
     }
 
-    displaySteps = () => {
-        let steps = [];
+    getSteps = () => {
+        const steps = [];
 
         if (this.state.mintNewNft) {
             steps.push('Mint NFT')
@@ -182,12 +189,18 @@ export default class SmartContractCreation extends Component {
             steps.push('Transfer NFT')
         }
 
+        return steps;
+    }
+
+    displaySteps = () => {
+        const steps = this.getSteps();
+
         return <div className={"SmartContractCreationSteps"}>
             <h3>{steps.length} steps to do:</h3>
 
             <ul>
                 {steps.map((x, i) => {
-                    return <li>{i}. {x}</li>
+                    return <li key={i}>{i}. {x}</li>
                 })}
             </ul>
         </div>
@@ -210,8 +223,8 @@ export default class SmartContractCreation extends Component {
                 })
 
                 const qrCode = new QRCodeStyling({
-                    width: 250,
-                    height: 250,
+                    width: 350,
+                    height: 350,
                     margin: 10,
                     image: "",
                     data: session.link,
@@ -224,7 +237,7 @@ export default class SmartContractCreation extends Component {
                         margin: 10,
                     },
                     backgroundOptions: {
-                        color: "#242424"
+                        color: "#1F1F1F"
                     },
                     cornersSquareOptions: {
                         color: "white",
@@ -238,10 +251,14 @@ export default class SmartContractCreation extends Component {
 
                 connector.awaitSessionReady(session.id, 5 * 60 * 1000).then((sessionConfirmed) => {
                     if (sessionConfirmed.state === 'ready') {
-                        console.log(sessionConfirmed);
-                        // const correctConfig = TonhubConnector.verifyWalletConfig(session.id, sessionConfirmed.wallet);
-                        // console.log(correctConfig);
-
+                        this.setState({
+                            ownerAddress: sessionConfirmed.wallet.address,
+                            isLoggedIn: true,
+                            tonHubAppPublicKey: sessionConfirmed.wallet.appPublicKey,
+                            tonHubSessionSeed: session.seed,
+                            tonHubAppEndpoint: sessionConfirmed.wallet.endpoint,
+                            showTonHubPopup: false
+                        })
                     } else {
                         throw new Error('Impossible');
                     }
@@ -253,13 +270,33 @@ export default class SmartContractCreation extends Component {
 
     getTonHubLogin = () => {
         return <div className={"PopupItem"}>
-            <h3>Login with TonHub</h3>
-            <div className={"QrCode"} ref={this.qrGoesHere}/>
+            <div className={"PopupItemContent"}>
+                <h3>Login with TonHub</h3>
+                <div className={"QrCode"} ref={this.qrGoesHere}/>
+
+                <a onClick={() => {
+                    window.open(this.state.session.link, '_blank');
+                }}>Open in app</a><br/><br/>
+                <a onClick={() => this.setState({
+                    showTonHubPopup: false
+                })}>Close</a>
+            </div>
         </div>
     }
 
     render() {
         const dataCell = this.buildCell()
+
+        if (this.state.deploy) {
+            return <DeployOrSend
+                wallet={this.state.wallet}
+                steps={this.getSteps()}
+                walletAddress={this.state.ownerAddress}
+
+                tonHubAppPublicKey={this.state.tonHubAppPublicKey}
+                tonHubSessionSeed={this.state.tonHubSessionSeed}
+            />
+        }
 
         return <div>
 
@@ -396,9 +433,9 @@ export default class SmartContractCreation extends Component {
                             <label htmlFor="marketplaceFeeNumerator">Fee Numerator</label>
                             <label htmlFor="marketplaceFeeDenominator">Fee Denominator</label>
                             <input id="marketplaceFeeNumerator" name={'marketplaceFeeNumerator'}
-                                   value={this.state.marketplaceFeeNumerator} type={'number'}/>
+                                   defaultValue={this.state.marketplaceFeeNumerator} type={'number'}/>
                             <input id="marketplaceFeeDenominator" name={'marketplaceFeeDenominator'}
-                                   value={this.state.marketplaceFeeDenominator} type={'number'}/>
+                                   defaultValue={this.state.marketplaceFeeDenominator} type={'number'}/>
                         </div>
                     </div>
 
@@ -544,7 +581,9 @@ export default class SmartContractCreation extends Component {
                     <h3>Your data cell</h3>
                     {this.displayCell(dataCell)}
 
-                    <a className={"button"}>Deploy smart contract</a>
+                    <a className={"button"} onClick={() => {
+                        this.setState({deploy: true})
+                    }}>Deploy smart contract</a>
                 </div>
             </div>
         </div>
