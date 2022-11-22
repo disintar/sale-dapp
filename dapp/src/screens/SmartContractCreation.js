@@ -18,7 +18,7 @@ export default class SmartContractCreation extends Component {
             initMode: 0,
 
             nftAddress: '',
-            mintNewNft: false,
+            mintNewNft: true,
 
             ownerAddress: '',
             buyerAddress: '',
@@ -30,12 +30,12 @@ export default class SmartContractCreation extends Component {
             royaltyFeeDenominator: 100,
 
             royaltyAddress: '',
-            isTon: true,
+            isTon: false,
             price: 1,
             limitAddress: '',
             limitedTime: 0,
             jettonCollectionAddress: '',
-            jettonCollectionMintNew: false,
+            jettonCollectionMintNew: true,
 
             wallet: 'Wallet',
             isLoggedIn: false,
@@ -295,6 +295,7 @@ export default class SmartContractCreation extends Component {
 
                 tonHubAppPublicKey={this.state.tonHubAppPublicKey}
                 tonHubSessionSeed={this.state.tonHubSessionSeed}
+                nftPrice={this.state.price}
             />
         }
 
