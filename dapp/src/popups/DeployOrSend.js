@@ -154,17 +154,12 @@ export default class DeployOrSend extends Component {
                     </>,
                     lastUpdated: (new Date()).toString()
                 }, data.data.accountTransactionCount > 0 ? () => {
-                    this.stopCheck()
-
-                    setTimeout(() => {
+                    this.stopCheck(() => {
                         this.setState({
                             currentStep: this.state.currentStep + 1,
                             stepStatus: <></>
                         });
-
-                        this.processStep();
-                    }, 1000)
-
+                    })
                 } : null)
             })
         }, 1000)
@@ -175,8 +170,9 @@ export default class DeployOrSend extends Component {
         clearInterval(this.checkInterval)
     }
 
-    stopCheck = () => {
+    stopCheck = (f) => {
         clearInterval(this.checkInterval)
+        setTimeout(f, 1000);
     }
 
     render() {
