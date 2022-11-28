@@ -20,7 +20,7 @@
     slice buyer = data~load_msg_addr();
     cell sell_config = data~load_ref();
     cell price_config = data~load_ref();
-    data.end_parse();
+    data.end_parse(); ;; 100% sure no data in data
 
     return (current_mode,
             nft_address,

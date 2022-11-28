@@ -8,3 +8,8 @@ forall X -> int is_slice(X x) asm "<{ TRY:<{ SBITS DROP -1 PUSHINT }>CATCH<{ 2DR
 forall X -> int is_tuple(X x) asm "ISTUPLE";
 forall X -> tuple unsafe_to_tuple(X x) asm "NOP";
 int workchains_equal?(slice addr1, slice addr2) asm "REWRITESTDADDR DROP SWAP REWRITESTDADDR DROP EQUAL";
+
+int is_valid_full_address(slice x) asm "PARSEMSGADDRQ DUP"
+    "<{ DROP TLEN 1 PUSHINT GREATER"
+        "<{ -1 PUSHINT }>CONT <{ 0 PUSHINT }>CONT IFELSE"
+    "}>CONT IF";

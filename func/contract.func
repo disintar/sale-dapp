@@ -50,7 +50,7 @@
         if (equal_slices(message_from, deployer_address)) {
             ~strdump_safe("Got message from deployer");
 
-            if (slice_bits(in_msg_body) >= 32) {
+            if ((slice_bits(in_msg_body) >= 32) & ~ is_valid_full_address(in_msg_body)) {
                 ~strdump_safe("Process admin interface");
 
                 ;; TODO: test admin interface

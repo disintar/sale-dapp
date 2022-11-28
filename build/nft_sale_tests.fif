@@ -100,7 +100,7 @@ PROGRAM{
   DECLPROC test_cancel_sale
   DECLPROC __test_cancel_sale
   DECLPROC __test_fail_cancel_sale
-  DECLPROC __test_fail
+  DECLPROC __test_test
   power PROCREF:<{
     //  x exponent
     OVER	//  x exponent x
@@ -3877,9 +3877,28 @@ PROGRAM{
     generate_any_address CALLDICT	//  _1
     test_cancel_sale INLINECALLDICT	//  _2
   }>
-  __test_fail PROC:<{
+  __test_test PROC:<{
     // 
-    1239 THROW
-    1 PUSHINT	//  _2=1
+    123 PUSHINT	//  _1=123
+    0 PUSHINT	//  _1=123 _2=0
+    DUP	//  _1=123 _2=0 _3=0
+    2 PUSHINT	//  _1=123 _2=0 _3=0 _4=2
+    NEWC	//  _1=123 _2=0 _3=0 _4=2 _5
+    2 STU	//  _1=123 _2=0 _3=0 _7
+    1 STU	//  _1=123 _2=0 _9
+    8 STI	//  _1=123 _11
+    256 STU	//  _13
+    ENDC	//  _14
+    CTOS	//  random_wallet
+    DUP	//  random_wallet random_wallet
+    PARSEMSGADDRQ DUP
+    <{ DROP TLEN 1 PUSHINT GREATER <{ -1 PUSHINT }>CONT <{ 0 PUSHINT }>CONT IFELSE }>CONT
+    IF	//  random_wallet _17
+    NIP	//  e
+    IF:<{	// 
+      x{49276d20636f6f6c} PUSHSLICE	//  _21
+      ~strdump_safe CALLDICT
+    }>	// 
+    0 PUSHINT	//  _23=0
   }>
 }END>c
