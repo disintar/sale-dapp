@@ -135,7 +135,6 @@ export default class SmartContractCreation extends Component {
             }
 
             cell.storeRef(sellConfig.cell())
-            cell.storeRef(sellConfig.cell())
 
             const priceConfig = new Builder()
 
@@ -296,6 +295,7 @@ export default class SmartContractCreation extends Component {
                 tonHubAppPublicKey={this.state.tonHubAppPublicKey}
                 tonHubSessionSeed={this.state.tonHubSessionSeed}
                 nftPrice={this.state.price}
+                contractState={this.state}
             />
         }
 

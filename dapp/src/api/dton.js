@@ -43,4 +43,16 @@ export default class dTonAPI {
     `,
         }, {fetchPolicy: "no-cache"})
     }
+
+    calculateJettonAddress = (jettonAddress, userAddress) => {
+        return this.client.query({
+            query: gql`{
+  getJettonWalletAddress(
+    minter_address: "${jettonAddress}"
+    user_address: "${userAddress}"
+  )
+}
+    `,
+        }, {fetchPolicy: "no-cache"})
+    }
 }
