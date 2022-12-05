@@ -134,7 +134,7 @@ export default class App extends Component {
             </ul>
 
             {this.state.mode === 'description' ? <ToncliAppDescription code={this.state.code}/> : null}
-            {this.state.mode === 'app' ? <AppMenu/> : null}
+            {this.state.mode === 'app' ? <AppMenu code={this.state.code}/> : null}
 
             <div style={{
                 width: "900px",

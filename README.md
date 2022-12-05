@@ -23,7 +23,6 @@
 | Can be used by other developers as template for dApp                                                          | ✅      |
 | Merkle proofs on data from DTON                                                                               | TBD    |
 
-
 ## Toncli devs
 
 This is Disintar new sale contract & the example of how dApps on Toncli can be done. Feel free to use this repository as

@@ -178,7 +178,7 @@ export default class SmartContractCreation extends Component {
             steps.push('Mint NFT')
         }
 
-        if (this.state.jettonCollectionMintNew) {
+        if (!this.state.isTon && this.state.jettonCollectionMintNew) {
             steps.push('Mint Jetton')
         }
 

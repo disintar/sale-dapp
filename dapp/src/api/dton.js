@@ -55,4 +55,71 @@ export default class dTonAPI {
     `,
         }, {fetchPolicy: "no-cache"})
     }
+
+    getNftOwner = (address) => {
+        const tonAddress = new Address(address)
+        const rawAddress = tonAddress.toString('raw');
+
+
+        return this.client.query({
+            query: gql`{
+  transactions(
+    address: "${rawAddress.slice(2, rawAddress.length)}"
+    workchain: ${tonAddress.workchain}
+    page_size: 1
+  ) {
+	   parsed_nft_owner_address_address
+       parsed_nft_owner_address_workchain
+  }
+}`,
+        }, {fetchPolicy: "no-cache"})
+    }
+
+    getContractInfo = (address) => {
+        const tonAddress = new Address(address)
+        const rawAddress = tonAddress.toString('raw');
+
+
+        return this.client.query({
+            query: gql`{
+  transactions(
+    address: "${rawAddress.slice(2, rawAddress.length)}"
+    workchain: ${tonAddress.workchain}
+    page_size: 1
+  ) {
+    account_storage_balance_grams
+    account_state_state_init_code
+  }
+  
+  accountTransactionCount(
+    address: "${rawAddress.slice(2, rawAddress.length)}"
+    workchain: ${tonAddress.workchain}
+  )
+}`,
+        }, {fetchPolicy: "no-cache"})
+    }
+
+    runGetMethod = (address, method, stack) => {
+        const tonAddress = new Address(address)
+        const rawAddress = tonAddress.toString('raw');
+
+        const stackSerialized = stack.map(x => `{value_type: "${x.type}", value: "${x.value}"}`).join(",")
+
+        return this.client.query({
+            query: gql`
+mutation {
+  run_method(
+    stack: [${stackSerialized}]
+  	method_name: "${method}"
+    account_search_by_address: {address: "${rawAddress.slice(2, rawAddress.length)}", workchain: ${tonAddress.workchain}}
+  ) {
+    stack {
+      value
+      value_type
+    }
+    exit_code
+  }
+}`,
+        }, {fetchPolicy: "no-cache"})
+    }
 }

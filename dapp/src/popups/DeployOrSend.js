@@ -5,7 +5,7 @@ import dTonAPI from "../api/dton";
 import {TonhubConnector} from "ton-x";
 
 // do not ever use this nft code in production
-const nftCodeBase64 = "te6ccgECDgEAAdoAAQ7_APgAiPsEAQEU_wD0pBP0vPLICwICAWIDBAICzAUGAAmhH5_gDwIBIAcIAB3YHkZZ-sZ4sA54tmZPaqQC2dGRDjgEkvgfBoaYGAuNhJL4HwfSB9IBj9ABi465D9ABj9ABh4A4JZxwoYNhEaKRljgvlwyoD9IGoYCBH4BHADaY_pn5FBCC_mHopdR0SZCBuvGSAJ7Z5wGBoaGpqAwQgX5ZNRXXGBL4JCB_l4QJCgIBWAwNAfZRNccF8uGR-kAh8Ab6QNIAMfoACoIIB6EgoSGUUxWgod4i1wsBwwAgkgahkTbiIML_8uGSIY4-ghAFE42RyFAJzxZQC88WcSRJFFRGoHCAEMjLBVAHzxZQBfoCFctqEssfyz8ibrOUWM8XAZEy4gHJAfsAEEeUECo3W-ILAHJwghCLdxc1BcjL_1AEzxYQJIBAcIAQyMsFUAfPFlAF-gIVy2oSyx_LPyJus5RYzxcBkTLiAckB-wAAgAKONCbwBkYwghDVMnbbAW1xcIAQyMsFUAfPFlAF-gIVy2oSyx_LPyJus5RYzxcBkTLiAckB-wCTMDI04lUC8AgAET6RDDAAPLhTYAA7O1E0NM_-kAg10nCAJp_AfpA1DAQJBAj4DBwWW1tg";
+const nftCodeBase64 = "te6ccgECDgEAAdoAAQ7_APgAiPsEAQEU_wD0pBP0vPLICwICAWIDBAICzAUGAAmhH5_gDwIBIAcIAB3YHkZZ-sZ4sA54tmZPaqQC2dGRDjgEkvgfBoaYGAuNhJL4HwfSB9IBj9ABi465D9ABj9ABh4A4JZxwoYNhEaKRljgvlwyoD9IGoYCBH4BHADaY_pn5FBCC_mHopdR0SZCBuvGSAJ7Z5wGBoaGpqAwQgX5ZNRXXGBL4JCB_l4QJCgIBWAwNAfZRNccF8uGR-kAh8Ab6QNIAMfoACoIImJaAoSGUUxWgod4i1wsBwwAgkgahkTbiIML_8uGSIY4-ghAFE42RyFAJzxZQC88WcSRJFFRGoHCAEMjLBVAHzxZQBfoCFctqEssfyz8ibrOUWM8XAZEy4gHJAfsAEEeUECo3W-ILAHJwghCLdxc1BcjL_1AEzxYQJIBAcIAQyMsFUAfPFlAF-gIVy2oSyx_LPyJus5RYzxcBkTLiAckB-wAAgAKONCbwBkYwghDVMnbbAW1xcIAQyMsFUAfPFlAF-gIVy2oSyx_LPyJus5RYzxcBkTLiAckB-wCTMDI04lUC8AgAET6RDDAAPLhTYAA7O1E0NM_-kAg10nCAJp_AfpA1DAQJBAj4DBwWW1tg";
 const nftCode = BOC.fromStandard(Buffer.from(nftCodeBase64, 'base64'));
 
 
@@ -40,7 +40,8 @@ export default class DeployOrSend extends Component {
             jettonAddress: '',
             contractCode: '',
 
-            contractState: props.contractState
+            contractState: props.contractState,
+            contractAddress: ''
 
         }
 
@@ -50,7 +51,6 @@ export default class DeployOrSend extends Component {
 
     componentDidMount() {
         fetch(`${window.location.origin}${window.location.pathname}` + "/nft_sale.json").then(x => x.json()).then(x => {
-            console.log(x)
             this.setState({contractCode: x.code}, this.processStep);
         })
     }
@@ -65,6 +65,8 @@ export default class DeployOrSend extends Component {
                 this.mintNewJetton()
             } else if (this.state.steps.at(this.state.currentStep) === "Mint contract") {
                 this.mintContract()
+            } else if (this.state.steps.at(this.state.currentStep) === "Transfer NFT") {
+                this.sendNFT()
             }
 
             this.state.stepInited = true;
@@ -212,7 +214,7 @@ export default class DeployOrSend extends Component {
                     value: amount.toString(),
                     stateInit: stateInitBase64
                 }]
-            ).then(x => console.log(x));
+            );
 
             notifyString = 'Please, accept transaction in extension'
         }
@@ -355,7 +357,7 @@ export default class DeployOrSend extends Component {
                     data: payloadBase64,
                     dataType: "boc"
                 }]
-            ).then(x => console.log(x));
+            );
 
             notifyString = 'Please, accept transaction in extension'
         }
@@ -432,16 +434,121 @@ export default class DeployOrSend extends Component {
         const stateInitBase64 = Buffer.from(stateInitBOC).toString('base64')
         const stateInitCalculatedAddress = "0:" + stateInit.cell().hash().toString().toUpperCase()
         const friendlyAddress = (new Address(stateInitCalculatedAddress, {bounceable: true})).toString({})
-        const amount = (0.01) * 10 ** 9;
 
-        this.dton.calculateJettonAddress().then(dtonAnswer => {
-            const jettonContractAddress = dtonAnswer.data.getJettonWalletAddress
 
-            const mintMessage = new Builder()
-            mintMessage.storeAddress(jettonContractAddress)
+        let jettonAddress = "";
 
-            const payloadBOC = BOC.toBytesStandard(mintMessage.cell());
-            const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
+        if (this.state.jettonAddress !== "") {
+            jettonAddress = this.state.jettonAddress;
+        } else if (this.state.contractState.jettonCollectionAddress !== "") {
+            jettonAddress = this.state.contractState.jettonCollectionAddress;
+        }
+
+        // need to add payload with jetton address
+        if (!this.state.contractState.isTon) {
+            console.log("Deploy with jetton payload");
+            const amount = (0.02) * 10 ** 9;
+
+            this.dton.calculateJettonAddress(jettonAddress, friendlyAddress).then(dtonAnswer => {
+                const jettonContractAddress = dtonAnswer.data.getJettonWalletAddress
+
+                const mintMessage = new Builder()
+                mintMessage.storeAddress(new Address(jettonContractAddress))
+
+                const payloadBOC = BOC.toBytesStandard(mintMessage.cell())
+                const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
+
+                let notifyString;
+
+                if (this.state.wallet === 'TonHub') {
+                    const request = {
+                        seed: this.state.tonHubSessionSeed, // Session Seed
+                        appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
+                        to: friendlyAddress, // Destination
+                        value: amount, // Amount in nano-tons
+                        timeout: 5 * 60 * 1000, // 5 minute timeout
+                        stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
+                        payload: payloadBase64
+                    };
+                    const connector = new TonhubConnector({network: "mainnet"});
+                    connector.requestTransaction(request).then(response => {
+                        if (response.type !== 'success') {
+                            this.setState({error: 'Problems with your tonhub session. Please try to relogin'})
+                        }
+                    })
+
+                    notifyString = "Please, accept transaction in app";
+                } else if (this.state.wallet === 'TON Extension') {
+                    const provider = window.ton;
+
+                    provider.send(
+                        'ton_sendTransaction',
+                        [{
+                            to: friendlyAddress,
+                            value: amount.toString(),
+                            stateInit: stateInitBase64,
+                            data: payloadBase64,
+                            dataType: "boc"
+                        }]
+                    );
+
+                    notifyString = 'Please, accept transaction in extension'
+                }
+
+                const baseInfo = <>
+                    <div className={"PopupStepProcessItem"}>
+                        <p className={"PopupStepProcessItemLeft"}>Calculated contract address:</p>
+                        <p className={"PopupStepProcessItemRight"}>{friendlyAddress}</p>
+                    </div>
+
+                    <div className={"PopupStepProcessItem"}>
+                        <p className={"PopupStepProcessItemLeft"}>Status:</p>
+                        <p className={"PopupStepProcessItemRight"}>{notifyString}</p>
+                    </div>
+                </>
+
+                this.setState({
+                    stepStatus: <>
+                        {baseInfo}
+
+                        <div key="trnscnt" className={"PopupStepProcessItem"}>
+                            <p className={"PopupStepProcessItemLeft"}>Transactions on expected address:</p>
+                            <p className={"PopupStepProcessItemRight"}>...</p>
+                        </div>
+                    </>,
+                    lastUpdated: (new Date()).toString(),
+                    contractAddress: friendlyAddress
+                }, () => {
+                    this.checkInterval = setInterval(() => {
+                        this.dton.getTransactionCount(friendlyAddress).then(data => {
+                            this.setState({
+                                stepStatus: <>
+                                    {baseInfo}
+
+                                    <div key="trnscnt" className={"PopupStepProcessItem"}>
+                                        <p className={"PopupStepProcessItemLeft"}>Transactions on expected address:</p>
+                                        <p className={"PopupStepProcessItemRight"}>{data.data.accountTransactionCount}</p>
+                                    </div>
+                                </>,
+                                lastUpdated: (new Date()).toString()
+                            }, data.data.accountTransactionCount > 0 ? () => {
+                                this.stopCheck(() => {
+                                    this.setState({
+                                        currentStep: this.state.currentStep + 1,
+                                        stepStatus: <></>,
+                                        stepInited: false
+                                    }, () => {
+                                        this.processStep()
+                                    });
+                                })
+                            } : null)
+                        })
+                    }, 2000)
+                })
+            })
+        } else { // just deploy contract with empty state
+            console.log("Deploy with no payload")
+            const amount = (0.01) * 10 ** 9;
 
             let notifyString;
 
@@ -453,7 +560,6 @@ export default class DeployOrSend extends Component {
                     value: amount, // Amount in nano-tons
                     timeout: 5 * 60 * 1000, // 5 minute timeout
                     stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
-                    payload: payloadBase64
                 };
                 const connector = new TonhubConnector({network: "mainnet"});
                 connector.requestTransaction(request).then(response => {
@@ -472,10 +578,8 @@ export default class DeployOrSend extends Component {
                         to: friendlyAddress,
                         value: amount.toString(),
                         stateInit: stateInitBase64,
-                        data: payloadBase64,
-                        dataType: "boc"
                     }]
-                ).then(x => console.log(x));
+                );
 
                 notifyString = 'Please, accept transaction in extension'
             }
@@ -502,9 +606,8 @@ export default class DeployOrSend extends Component {
                     </div>
                 </>,
                 lastUpdated: (new Date()).toString(),
-                nftAddress: friendlyAddress
+                contractAddress: friendlyAddress
             }, () => {
-
                 this.checkInterval = setInterval(() => {
                     this.dton.getTransactionCount(friendlyAddress).then(data => {
                         this.setState({
@@ -522,7 +625,8 @@ export default class DeployOrSend extends Component {
                                 this.setState({
                                     currentStep: this.state.currentStep + 1,
                                     stepStatus: <></>,
-                                    stepInited: false
+                                    stepInited: false,
+                                    contractAddress: friendlyAddress
                                 }, () => {
                                     this.processStep()
                                 });
@@ -531,6 +635,123 @@ export default class DeployOrSend extends Component {
                     })
                 }, 2000)
             })
+        }
+
+    }
+
+    sendNFT = () => {
+        const message = new Builder();
+        message.storeUint(0x5fcc3d14, 32)
+        message.storeUint(228, 64) // query id
+        message.storeAddress(new Address(this.state.contractAddress))
+        message.storeAddress(new Address(this.state.walletAddress))
+        message.storeUint(0, 1) // custom payload
+        message.storeCoins(new Coins(0.01)) // forward amount
+        message.storeUint(0, 32)
+
+        let nft_address;
+        // NFT address we want to sell
+        if (this.state.nftAddress !== '') {
+            nft_address = this.state.nftAddress;
+        } else if (this.state.contractState.nftAddress !== '') {
+            nft_address = this.state.contractState.nftAddress;
+        } else {
+            this.setState({
+                currentStep: this.state.currentStep + 1,
+                stepStatus: <></>,
+                stepInited: false
+            }, () => {
+                window.location = `/?mode=app&stage=existing&address=${this.state.contractAddress}`
+            });
+        }
+
+        const payloadBOC = BOC.toBytesStandard(message.cell())
+        const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
+
+        let notifyString;
+        const amount = 0.05 * 10 ** 9
+
+        if (this.state.wallet === 'TonHub') {
+            const request = {
+                seed: this.state.tonHubSessionSeed, // Session Seed
+                appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
+                to: nft_address, // Destination
+                value: amount, // Amount in nano-tons
+                timeout: 5 * 60 * 1000, // 5 minute timeout
+                payload: payloadBase64
+            };
+            const connector = new TonhubConnector({network: "mainnet"});
+            connector.requestTransaction(request).then(response => {
+                if (response.type !== 'success') {
+                    this.setState({error: 'Problems with your tonhub session. Please try to relogin'})
+                }
+            })
+
+            notifyString = "Please, accept transaction in app";
+        } else if (this.state.wallet === 'TON Extension') {
+            const provider = window.ton;
+
+            provider.send(
+                'ton_sendTransaction',
+                [{
+                    to: nft_address,
+                    value: amount.toString(),
+                    data: payloadBase64,
+                    dataType: "boc"
+                }]
+            );
+
+            notifyString = 'Please, accept transaction in extension'
+        }
+
+        const baseInfo = <>
+            <div className={"PopupStepProcessItem"}>
+                <p className={"PopupStepProcessItemLeft"}>NFT address:</p>
+                <p className={"PopupStepProcessItemRight"}>{nft_address}</p>
+            </div>
+
+            <div className={"PopupStepProcessItem"}>
+                <p className={"PopupStepProcessItemLeft"}>Status:</p>
+                <p className={"PopupStepProcessItemRight"}>{notifyString}</p>
+            </div>
+        </>
+
+        this.setState({
+            stepStatus: <>
+                {baseInfo}
+
+                <div key="trnscnt" className={"PopupStepProcessItem"}>
+                    <p className={"PopupStepProcessItemLeft"}>Owner of NFT:</p>
+                    <p className={"PopupStepProcessItemRight"}>...</p>
+                </div>
+            </>,
+            lastUpdated: (new Date()).toString()
+        }, () => {
+
+            const needed_owner = new Address(this.state.contractAddress).toString('base64', {bounceable: true});
+
+            this.checkInterval = setInterval(() => {
+                this.dton.getNftOwner(nft_address).then(data => {
+                    const transaction = data.data.transactions[0];
+                    const address = new Address(transaction.parsed_nft_owner_address_workchain + ":" + transaction.parsed_nft_owner_address_address).toString('base64', {bounceable: true})
+
+                    this.setState({
+                        stepStatus: <>
+                            {baseInfo}
+
+                            <div key="trnscnt" className={"PopupStepProcessItem"}>
+                                <p className={"PopupStepProcessItemLeft"}>Owner of NFT:</p>
+                                <p className={"PopupStepProcessItemRight"}>{address}</p>
+                            </div>
+                        </>,
+                        lastUpdated: (new Date()).toString()
+                    }, address === needed_owner ? () => {
+                        this.stopCheck(() => {
+                            window.location = `/?mode=app&stage=existing&address=${this.state.contractAddress}`
+                        })
+                    } : null)
+                })
+            }, 2000)
         })
     }
 

@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import './styles/AppMenu.css';
 import SmartContractCreation from "./screens/SmartContractCreation";
+import SmartContractExplore from "./screens/SmartContractExplore";
 
 export default class AppMenu extends Component {
     constructor(props) {
@@ -12,7 +13,8 @@ export default class AppMenu extends Component {
         }
 
         this.state = {
-            stage: params.get('stage') ? params.get('stage') : 'choose'
+            stage: params.get('stage') ? params.get('stage') : 'choose',
+            address: params.get('address') ? params.get('address') : ''
         }
     }
 
@@ -72,6 +74,7 @@ export default class AppMenu extends Component {
                     <a onClick={() => this.updateLocation('stage', 'choose')}>Back</a>
                 </div>
 
+                <SmartContractExplore code={this.props.code} address={this.state.address}/>
             </div>
         }
 

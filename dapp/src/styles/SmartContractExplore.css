@@ -1,0 +1,73 @@
+.SmartContractExploreHeader {
+    text-align: left;
+}
+
+.SmartContractExploreHeaderInfo {
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+}
+
+.SmartContractExploreHeaderInfo div {
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.SmartContractExploreHeaderInfoBlock p {
+    margin: 0;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1.1;
+}
+
+.SmartContractExploreHeaderInfoBlock p:nth-child(2) {
+    margin-left: 1rem;
+}
+
+.SmartContractExploreSmcInfo {
+    width: 50%;
+}
+
+.SmartContractExploreSmcInfoBlock {
+    display: flex;
+}
+
+.SmartContractExploreSmcInfoBlock p {
+    margin: 0.5rem 0;
+    padding: 0;
+    line-height: 1.1;
+    font-size: 1rem;
+}
+
+.SmartContractExploreSmcInfoBlock a {
+    margin: 0.5rem 0 0.5rem 1rem;
+    padding: 0;
+    line-height: 1.1;
+    font-size: 1rem;
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px dashed white;
+}
+
+
+.SmartContractExploreSmcInfoBlock p:nth-child(2) {
+    margin-left: 1rem;
+}
+
+.SmartContractExploreSmcInfoBlockWithIcon {
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+
+.SmartContractExploreSmcInfoBlockWithIcon p {
+    margin: 0.5rem 0;
+    padding: 0;
+}
+
+.SmartContractExploreSmcInfoBlockWithIcon p:nth-child(2) {
+    margin-left: 1rem;
+}
