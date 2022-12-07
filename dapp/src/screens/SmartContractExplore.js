@@ -1,14 +1,20 @@
 import React, {Component} from 'react'
 import '../styles/SmartContractExplore.css';
 import dTonAPI from "../api/dton";
-import {BOC, Builder} from "ton3-core";
+import {BOC, Builder, Address} from "ton3-core";
 import {ton_icon} from "../icons";
 import {TonhubConnector} from "ton-x";
 import QRCodeStyling from "qr-code-styling";
 
 const parseAddressFromCs = bocBase64 => {
-    const cell = BOC.fromStandard(Buffer.from(bocBase64, 'base64'))
-    return cell.slice().loadAddress()
+    try {
+        const cell = BOC.fromStandard(Buffer.from(bocBase64, 'base64'))
+        return cell.slice().loadAddress()
+    } catch (e) {
+        console.error(e)
+        return null
+    }
+
 }
 
 const fixBigAddress = (addr, cnt = 14) => {

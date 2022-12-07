@@ -43,7 +43,7 @@ It's use `action.yml` & `.github/workflow/main.yml` to do it.
 
 In docker file we define to
 run [tests](https://github.com/disintar/sale-dapp/blob/c5f1e8ba36ddcff716d5666a07c38f5bead1a79a/Dockerfile#L7).
-If for some reason you it'll be failed - the action will also fail, and bad version of your contract willn't be in dApp.
+If for some reason it'll be failed - the action will also fail, and bad version of your contract willn't be in dApp.
 
 <img src="https://github.com/disintar/sale-dapp/blob/master/dapp/public/screens/screen1.png" alt="tests"/>
 
