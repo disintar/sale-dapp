@@ -57,7 +57,7 @@ export default class SmartContractCreation extends Component {
 
         this.provider = {};
         this.tonhubconnector = new TonhubConnector();
-        this.tonconnect = new TonConnect();
+        this.tonconnect = new TonConnect({manifestUrl: 'https://sale.dapp.dton.io/tonconnect-manifest.json'});
 
         this.tonconnect.onStatusChange(this.tonConnectHandler);
 
