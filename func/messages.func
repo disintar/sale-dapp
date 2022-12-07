@@ -55,7 +55,11 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
             forward_amount_real, ;; forward_amount
             op::nft::transfer, ;; op code
             0, ;; query id
-            begin_cell().store_slice(new_owner_address), ;; payload
+            begin_cell().store_slice(new_owner_address) ;; new_owner_address
+                    .store_slice(new_owner_address) ;; response_address;
+                    .store_int(0, 1) ;; empty custom_payload
+                    .store_coins(0) ;; forward amount to new_owner_address
+                    .store_int(0, 1), ;; empty forward_payload
             mode); ;; send mode
 }
 

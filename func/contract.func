@@ -139,9 +139,9 @@
             send_money_or_jettons_back_op(op, in_msg_body, message_from, msg_value, fwd_fee, "Error 🥂️");
         }
     } elseif (mode == 1) { ;; Seller is inited
-        ;; Change settings & admin control
-
-        if (equal_slices(message_from, deployer_address)) {
+        ;; Change settings & admin control if message from deployer
+        ;; And have bits
+        if (equal_slices(message_from, deployer_address) & slice_bits(in_msg_body) >= 32) {
             ~strdump_safe("Process message from deployer");
 
             int op = in_msg_body~load_uint(32);
@@ -185,7 +185,7 @@
             ;;                 int exit_code = process_admin(op, in_msg_body);
             ;;                 throw(exit_code);
             ;;             }
-        }  else {
+        } else {
             ~strdump_safe("Process buy request 💸");
 
             ;; Try to buy

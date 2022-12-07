@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import '../styles/SmartContractExplore.css';
 import dTonAPI from "../api/dton";
-import {BOC} from "ton3-core";
+import {BOC, Builder} from "ton3-core";
 import {ton_icon} from "../icons";
 import {TonhubConnector} from "ton-x";
 import QRCodeStyling from "qr-code-styling";
@@ -195,10 +195,10 @@ export default class SmartContractExplore extends Component {
                         marketplace_address: marketplaceCs ? marketplaceCs.toString('base64', {bounceable: true}) : null,
                         nft_address: nftCs ? nftCs.toString('base64', {bounceable: true}) : null,
                         owner_address: ownerAddr ? ownerAddr.toString('base64', {bounceable: true}) : null,
-                        full_price: fullPrice,
-                        market_fee: market_fee,
+                        full_price: parseInt(fullPrice),
+                        market_fee: parseInt(market_fee),
                         royalty_address: royaltyCs ? royaltyCs.toString('base64', {bounceable: true}) : null,
-                        royalty: royalty,
+                        royalty: parseInt(royalty),
                         is_ton: isTon,
                         my_jetton_address: my_jettonCs ? my_jettonCs.toString('base64', {bounceable: true}) : null,
                         limit_address: limitCs ? limitCs.toString('base64', {bounceable: true}) : null,
@@ -261,6 +261,112 @@ export default class SmartContractExplore extends Component {
         }
 
         return null;
+    }
+
+    processBuy = () => {
+        if (this.state.is_ton) {
+            if (this.state.wallet === 'TonHub') {
+                const request = {
+                    seed: this.state.tonHubSessionSeed, // Session Seed
+                    appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
+                    to: this.state.address, // Destination
+                    value: this.state.full_price + (0.06 * 10 ** 9), // Amount in nano-tons
+                    timeout: 5 * 60 * 1000, // 5 minute timeout
+                    // stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
+                    // payload: payloadBase64
+                }
+
+                this.tonhubconnector.requestTransaction(request)
+            } else if (this.state.wallet === 'TON Extension') {
+                const provider = window.ton;
+
+                provider.send(
+                    'ton_sendTransaction',
+                    [{
+                        to: this.state.address,
+                        value: parseInt(this.state.full_price) + (0.06 * 10 ** 9),
+                        // stateInit: stateInitBase64,
+                        // data: payloadBase64,
+                        // dataType: "boc"
+                    }]
+                );
+
+            }
+        }
+    }
+
+
+    cancelSale = () => {
+        const cell = new Builder()
+        // cancel sale
+        cell.storeUint(0x0000000b, 32)
+        const payloadBOC = BOC.toBytesStandard(cell.cell());
+        const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
+
+        if (this.state.wallet === 'TonHub') {
+            const request = {
+                seed: this.state.tonHubSessionSeed, // Session Seed
+                appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
+                to: this.state.address, // Destination
+                value: 0.03 * 10 ** 9, // Amount in nano-tons
+                timeout: 5 * 60 * 1000, // 5 minute timeout
+                // stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
+                payload: payloadBase64
+            }
+
+            this.tonhubconnector.requestTransaction(request)
+        } else if (this.state.wallet === 'TON Extension') {
+            const provider = window.ton;
+
+            provider.send(
+                'ton_sendTransaction',
+                [{
+                    to: this.state.address,
+                    value: 0.03 * 10 ** 9,
+                    // stateInit: stateInitBase64,
+                    data: payloadBase64,
+                    dataType: "boc"
+                }]
+            );
+        }
+    }
+
+    sendNftOneMoreTime = () => {
+        const cell = new Builder()
+        // cancel sale
+        cell.storeUint(0x000000a0, 32)
+        const payloadBOC = BOC.toBytesStandard(cell.cell());
+        const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
+
+        if (this.state.wallet === 'TonHub') {
+            const request = {
+                seed: this.state.tonHubSessionSeed, // Session Seed
+                appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
+                to: this.state.address, // Destination
+                value: 0.03 * 10 ** 9, // Amount in nano-tons
+                timeout: 5 * 60 * 1000, // 5 minute timeout
+                // stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
+                payload: payloadBase64
+            }
+
+            this.tonhubconnector.requestTransaction(request)
+        } else if (this.state.wallet === 'TON Extension') {
+            const provider = window.ton;
+
+            provider.send(
+                'ton_sendTransaction',
+                [{
+                    to: this.state.address,
+                    value: 0.03 * 10 ** 9,
+                    // stateInit: stateInitBase64,
+                    data: payloadBase64,
+                    dataType: "boc"
+                }]
+            );
+        }
+    }
+
+    editSale = () => {
     }
 
     render() {
@@ -346,7 +452,7 @@ export default class SmartContractExplore extends Component {
 
                             <div className="SmartContractExploreSmcInfoBlock">
                                 <p>Is closed:</p>
-                                <p>{this.state.is_closed}</p>
+                                <p>{this.state.is_closed === "-1" ? "🔐" : "🔓"}</p>
                             </div>
 
                             <div className="SmartContractExploreSmcInfoBlock">
@@ -404,9 +510,24 @@ export default class SmartContractExplore extends Component {
                                 <h3>{this.state.nftName}</h3>
                             </div>
 
-                            {this.state.mode === "1" ? <a className="SmartContractExploreSmcShowAction">💸 Buy</a> : null}<br/>
-                            {this.state.mode === "1" ? <a className="SmartContractExploreSmcShowAction">✋🏻 Cancel sale</a> : null}<br/>
-                            <a className="SmartContractExploreSmcShowAction">🛠 Edit</a><br/>
+                            {this.state.mode === "1" ?
+                                <div className="SmartContractExploreSmcShowAction">
+                                    <a onClick={this.processBuy}>💸 Buy</a>
+                                </div> : null}
+
+                            {this.state.mode === "1" ?
+                                <div className="SmartContractExploreSmcShowAction">
+                                    <a onClick={this.cancelSale}>✋🏻 Cancel sale</a>
+                                </div> : null}
+
+                            {this.state.mode === "3" || this.state.mode === "2" ?
+                                <div className="SmartContractExploreSmcShowAction">
+                                    <a onClick={this.sendNftOneMoreTime}>✈️ Send NFT</a>
+                                </div> : null}
+
+                            <div className="SmartContractExploreSmcShowAction">
+                                <a onClick={this.editSale}>🛠 Edit</a>
+                            </div>
 
 
                         </div>

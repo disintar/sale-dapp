@@ -102,9 +102,10 @@
     text-align: center;
     width: 100%;
     display: block;
+    margin-bottom: 0.6rem;
 }
 
-.SmartContractExploreSmcShowAction:hover {
+.SmartContractExploreSmcShowAction a:hover {
     border-bottom: 1px dashed;
     cursor: pointer;
 }
