@@ -1,6 +1,11 @@
 ;; thanks
 ;; https://github.com/EmelyanenkoK/nominator_pool/blob/07da6387390adef1b1112df36bf8fd6dba3d1052/text_utils.fc
 slice encode_number_to_text(int number) {
+    builder text_b = begin_cell();
+    if (number < 0) {
+        text_b = text_b.store_slice("-");
+        number = - number;
+    }
     int len = 0;
     int value = 0;
     int mult = 1;
@@ -11,7 +16,7 @@ slice encode_number_to_text(int number) {
         len = len + 1;
     } until (number == 0);
 
-    slice text = begin_cell().store_uint(value, len * 8).end_cell().begin_parse();
+    slice text = text_b.store_uint(value, len * 8).end_cell().begin_parse();
     return text;
 }
 
