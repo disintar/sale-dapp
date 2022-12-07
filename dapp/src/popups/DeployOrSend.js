@@ -130,7 +130,7 @@ export default class DeployOrSend extends Component {
             priceConfig.storeCoins(new Coins(this.state.contractState.price))
 
             if (this.state.contractState.limitAddress !== '') {
-                priceConfig.storeAddress(this.state.contractState.limitAddress)
+                priceConfig.storeAddress(new Address(this.state.contractState.limitAddress))
             } else {
                 priceConfig.storeUint(0, 2)
             }
@@ -790,6 +790,10 @@ export default class DeployOrSend extends Component {
                     <p className={"PopupStepProcessItemLeft"}>Last updated:</p>
                     <p className={"PopupStepProcessItemRight"}>{this.state.lastUpdated}</p>
                 </div>
+
+                <br/>
+                <br/>
+                <a style={{cursor: "pointer"}} onClick={() => this.setState({stepInited: false}, this.processStep)}>One more time</a>
             </div>
 
 

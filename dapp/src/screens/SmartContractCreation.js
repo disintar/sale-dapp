@@ -150,7 +150,7 @@ export default class SmartContractCreation extends Component {
             priceConfig.storeCoins(new Coins(this.state.price))
 
             if (this.state.limitAddress !== '') {
-                priceConfig.storeAddress(this.state.limitAddress)
+                priceConfig.storeAddress(new Address(this.state.limitAddress))
             } else {
                 priceConfig.storeUint(0, 2)
             }
@@ -496,12 +496,12 @@ export default class SmartContractCreation extends Component {
                     <div
                         className={`SmartContractCreationSettingsRow ${this.state.displayMode === 'simple' ? 'hidden' : ''}`}>
                         <div className={"SmartContractCreationSettingsRowTitle"}>
-                            <h4>Address of NFT buyer who bought NFT <span>*</span></h4>
+                            <h4>Limit sale for <span>*</span></h4>
                         </div>
 
                         <div className={"SmartContractCreationSettingsRowInput"}>
                             <input name={'limitAddress'} value={this.state.limitAddress} onChange={this.onChange}
-                                   placeholder={"NFT buyer address goes here"} type={'text'}/>
+                                   placeholder={"Limit sale for"} type={'text'}/>
                         </div>
                     </div>
 
@@ -617,12 +617,12 @@ export default class SmartContractCreation extends Component {
                     <div
                         className={`SmartContractCreationSettingsRow ${this.state.displayMode === 'simple' ? 'hidden' : ''}`}>
                         <div className={"SmartContractCreationSettingsRowTitle"}>
-                            <h4>Buyer address for whom this deal <span>*</span></h4>
+                            <h4>Who bought NFT <span>*</span></h4>
                         </div>
 
                         <div className={"SmartContractCreationSettingsRowInput"}>
                             <input name={'buyerAddress'} value={this.state.buyerAddress} onChange={this.onChange}
-                                   placeholder={"Buyer address for whom this deal"} type={'text'}/>
+                                   placeholder={"Who bought NFT"} type={'text'}/>
                         </div>
                     </div>
 

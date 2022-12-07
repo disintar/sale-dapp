@@ -190,33 +190,41 @@ PROGRAM{
   }>
   encode_number_to_text PROC:<{
     //  number
-    0 PUSHINT	//  number len=0
-    DUP	//  number len=0 value=0
-    1 PUSHINT	//  number len=0 value=0 mult=1
+    NEWC	//  number text_b
+    OVER	//  number text_b number
+    0 LESSINT	//  number text_b _4
+    IF:<{	//  number text_b
+      x{2d} PUSHSLICE	//  number text_b _5
+      STSLICER	//  number text_b
+      SWAP	//  text_b number
+      NEGATE	//  text_b number
+      SWAP	//  number text_b
+    }>	//  number text_b
+    0 PUSHINT	//  number text_b len=0
+    DUP	//  number text_b len=0 value=0
+    1 PUSHINT	//  number text_b len=0 value=0 mult=1
     UNTIL:<{
-      s0 s3 XCHG
-      10 PUSHINT	//  mult len value number _8=10
-      DIVMOD	//  mult len value number res
-      48 ADDCONST	//  mult len value number _11
-      s4 PUSH	//  mult len value number _11 mult
-      MUL	//  mult len value number _12
-      s1 s2 XCHG	//  mult len number value _12
-      ADD	//  mult len number value
-      s0 s3 XCHG	//  value len number mult
-      8 LSHIFT#	//  value len number mult
-      s0 s2 XCHG	//  value mult number len
-      INC	//  value mult number len
-      OVER	//  value mult number len number
-      0 EQINT	//  value mult number len _19
-      s4 s3 s0 XCHG3	//  number len value mult _19
-    }>	//  number len value mult
+      s0 s4 XCHG
+      10 PUSHINT	//  mult text_b len value number _15=10
+      DIVMOD	//  mult text_b len value number res
+      48 ADDCONST	//  mult text_b len value number _18
+      s5 PUSH	//  mult text_b len value number _18 mult
+      MUL	//  mult text_b len value number _19
+      s1 s2 XCHG	//  mult text_b len number value _19
+      ADD	//  mult text_b len number value
+      s0 s4 XCHG	//  value text_b len number mult
+      8 LSHIFT#	//  value text_b len number mult
+      s0 s2 XCHG	//  value text_b mult number len
+      INC	//  value text_b mult number len
+      OVER	//  value text_b mult number len number
+      0 EQINT	//  value text_b mult number len _26
+      s5 s3 s0 XCHG3	//  number text_b len value mult _26
+    }>	//  number text_b len value mult
     DROP
-    s2 POP	//  value len
-    NEWC	//  value len _21
-    SWAP	//  value _21 len
-    3 LSHIFT#	//  value _21 _23
-    STUX	//  _24
-    ENDC	//  _25
+    s3 POP	//  value text_b len
+    3 LSHIFT#	//  value text_b _29
+    STUX	//  _30
+    ENDC	//  _31
     CTOS	//  text
   }>
   ~strdump_safe PROC:<{
@@ -339,32 +347,39 @@ PROGRAM{
   }>
   send_message PROCINLINE:<{
     //  to_address amount op query_id payload send_mode
-    0 PUSHINT	//  to_address amount op query_id payload send_mode _7=0
-    16 PUSHINT	//  to_address amount op query_id payload send_mode _7=0 _8=16
-    NEWC	//  to_address amount op query_id payload send_mode _7=0 _8=16 _9
-    6 STU	//  to_address amount op query_id payload send_mode _7=0 _11
-    s0 s7 XCHG2	//  _7=0 amount op query_id payload send_mode _11 to_address
-    STSLICER	//  _7=0 amount op query_id payload send_mode _12
-    s0 s5 XCHG2	//  _7=0 send_mode op query_id payload _12 amount
-    STVARUINT16	//  _7=0 send_mode op query_id payload _13
-    s1 s5 XCHG	//  payload send_mode op query_id _7=0 _13
-    107 STU	//  payload send_mode op query_id _27
-    s1 s2 XCHG	//  payload send_mode query_id op _27
-    32 STU	//  payload send_mode query_id _29
-    64 STU	//  payload send_mode msg
-    s2 PUSH	//  payload send_mode msg payload
-    ISNULL	//  payload send_mode msg _32
-    NOT	//  payload send_mode msg _33
-    IF:<{	//  payload send_mode msg
-      ROT	//  send_mode msg payload
-      STBR	//  send_mode msg
-      SWAP	//  msg send_mode
+    1 PUSHINT	//  to_address amount op query_id payload send_mode _7=1
+    0 PUSHINT	//  to_address amount op query_id payload send_mode _7=1 _8=0
+    16 PUSHINT	//  to_address amount op query_id payload send_mode _7=1 _8=0 _9=16
+    NEWC	//  to_address amount op query_id payload send_mode _7=1 _8=0 _9=16 _10
+    6 STU	//  to_address amount op query_id payload send_mode _7=1 _8=0 _12
+    s0 s8 XCHG2	//  _8=0 amount op query_id payload send_mode _7=1 _12 to_address
+    STSLICER	//  _8=0 amount op query_id payload send_mode _7=1 _13
+    s0 s6 XCHG2	//  _8=0 _7=1 op query_id payload send_mode _13 amount
+    STVARUINT16	//  _8=0 _7=1 op query_id payload send_mode _14
+    s1 s6 XCHG	//  send_mode _7=1 op query_id payload _8=0 _14
+    106 STU	//  send_mode _7=1 op query_id payload _26
+    s1 s4 XCHG	//  send_mode payload op query_id _7=1 _26
+    1 STU	//  send_mode payload op query_id msg
+    s0 s2 XCHG
+    NEWC	//  send_mode payload msg query_id op _30
+    32 STU	//  send_mode payload msg query_id _32
+    64 STU	//  send_mode payload msg msgBody
+    s2 PUSH	//  send_mode payload msg msgBody payload
+    ISNULL	//  send_mode payload msg msgBody _35
+    NOT	//  send_mode payload msg msgBody _36
+    IF:<{	//  send_mode payload msg msgBody
+      ROT	//  send_mode msg msgBody payload
+      STBR	//  send_mode msg msgBody
+      SWAP	//  send_mode msgBody msg
     }>ELSE<{
-      s2 POP	//  msg send_mode
+      s2 POP	//  send_mode msgBody msg
     }>
-    SWAP	//  send_mode msg
-    ENDC	//  send_mode _35
-    SWAP	//  _35 send_mode
+    SWAP	//  send_mode msg msgBody
+    ENDC	//  send_mode msg _38
+    SWAP	//  send_mode _38 msg
+    STREF	//  send_mode msg
+    ENDC	//  send_mode _40
+    SWAP	//  _40 send_mode
     SENDRAWMSG
   }>
   send_message_with_text PROCINLINE:<{
@@ -454,7 +469,7 @@ PROGRAM{
     //  message_from msg_value fwd_fee text
     s2 s1 XCPU	//  message_from text fwd_fee msg_value fwd_fee
     SUB	//  message_from text fwd_fee _5
-    20000000 PUSHINT	//  message_from text fwd_fee _5 _6=20000000
+    50000000 PUSHINT	//  message_from text fwd_fee _5 _6=50000000
     SUB	//  message_from text fwd_fee new_fwd_amount
     DUP	//  message_from text fwd_fee new_fwd_amount new_fwd_amount
     0 GTINT	//  message_from text fwd_fee new_fwd_amount _10
@@ -474,7 +489,7 @@ PROGRAM{
     IF:<{	//  text in_msg_body message_from msg_value fwd_fee
       TUCK	//  text in_msg_body message_from fwd_fee msg_value fwd_fee
       SUB	//  text in_msg_body message_from fwd_fee _9
-      20000000 PUSHINT	//  text in_msg_body message_from fwd_fee _9 _10=20000000
+      50000000 PUSHINT	//  text in_msg_body message_from fwd_fee _9 _10=50000000
       SUB	//  text in_msg_body message_from fwd_fee new_fwd_amount
       DUP	//  text in_msg_body message_from fwd_fee new_fwd_amount new_fwd_amount
       0 GTINT	//  text in_msg_body message_from fwd_fee new_fwd_amount _14
@@ -743,7 +758,7 @@ PROGRAM{
           x{476f74206e6f74206f7572204e46542c20626f756365206974206261636b} PUSHSLICE	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body _86
           ~strdump_safe CALLDICT
           s7 PUSH
-          20000000 PUSHINT	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body msg_value _89=20000000
+          50000000 PUSHINT	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body msg_value _89=50000000
           SUB	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body _90
           s6 PUSH	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body _90 fwd_fee
           SUB	//  prev_owner_address msg_value message_from fwd_fee mode nft_address deployer_address buyer in_msg_body new_fwd_amount
@@ -875,7 +890,7 @@ PROGRAM{
             18 s() PUSH
             17 s() PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address msg_value fwd_fee
             SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _186
-            20000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _186 _187=20000000
+            50000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address _186 _187=50000000
             SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address new_fwd_amount
             x{436865636b206861766520776520676f74206d6f6e6579206f6e} PUSHSLICE	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address new_fwd_amount _189
             s4 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config marketplace_numerator marketplace_denominator royalty_numerator royalty_denominator royalty_destanation is_ton price royalty_fee=0 market_fee=0 my_jetton_address new_fwd_amount _189 royalty_fee=0
@@ -984,7 +999,7 @@ PROGRAM{
             SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _248
             s4 PUSH	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _248 market_fee
             SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _249
-            20000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _249 _250=20000000
+            50000000 PUSHINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _249 _250=50000000
             SUB	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _251
             1 LESSINT	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _253
             OVER	//  in_msg_body msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee price _253 price
@@ -1092,7 +1107,7 @@ PROGRAM{
                 2 LSHIFT#	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body nalogi
                 s15 s(-1) PUXC	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body msg_value nalogi
                 SUB	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body _332
-                20000000 PUSHINT	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body _332 _333=20000000
+                50000000 PUSHINT	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body _332 _333=50000000
                 SUB	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount
                 DUP	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount new_fwd_amount
                 0 GTINT	//  price msg_value message_from fwd_fee mode nft_address deployer_address buyer sell_config price_config market_fee royalty_destanation royalty_fee amount sender in_msg_body new_fwd_amount _337
