@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import '../styles/SmartContractExplore.css';
 import dTonAPI from "../api/dton";
-import {BOC, Builder, Address} from "ton3-core";
+import {BOC, Builder, Address, Coins} from "ton3-core";
 import {ton_icon} from "../icons";
 import {TonhubConnector} from "ton-x";
 import QRCodeStyling from "qr-code-styling";
@@ -63,6 +63,7 @@ export default class SmartContractExplore extends Component {
 
             showTonHubPopup: false,
             showTonconnectPopup: false,
+            showEditPopup: false,
             tonconnectSessionLink: '',
             tonHubSessionLink: '',
             tonHubAppPublicKey: '',
@@ -78,40 +79,30 @@ export default class SmartContractExplore extends Component {
         this.updateContractInfo()
     }
 
+    onChange = (item) => {
+        this.setState({[item.target.name]: item.target.value})
+    }
+
     loginTonHub = () => {
         this.setState({
-            showTonHubPopup: true,
-            wallet: 'TonHub',
-            isLoggedIn: false,
-            ownerAddress: ''
+            showTonHubPopup: true, wallet: 'TonHub', isLoggedIn: false, ownerAddress: ''
         }, () => {
             const connector = new TonhubConnector({network: 'mainnet'});
             connector.createNewSession({
-                name: 'Disintar',
-                url: 'https://beta.disintar.io'
+                name: 'Disintar', url: 'https://beta.disintar.io'
             }).then((session) => {
                 this.setState({
                     session: session
                 })
 
                 const qrCode = new QRCodeStyling({
-                    width: 350,
-                    height: 350,
-                    margin: 10,
-                    image: "",
-                    data: session.link,
-                    dotsOptions: {
-                        color: "white",
-                        type: "rounded",
-                    },
-                    imageOptions: {
-                        crossOrigin: "anonymous",
-                        margin: 10,
-                    },
-                    backgroundOptions: {
+                    width: 350, height: 350, margin: 10, image: "", data: session.link, dotsOptions: {
+                        color: "white", type: "rounded",
+                    }, imageOptions: {
+                        crossOrigin: "anonymous", margin: 10,
+                    }, backgroundOptions: {
                         color: "#1F1F1F"
-                    },
-                    cornersSquareOptions: {
+                    }, cornersSquareOptions: {
                         color: "white",
                     },
                 })
@@ -152,6 +143,95 @@ export default class SmartContractExplore extends Component {
                 <a onClick={() => this.setState({
                     showTonHubPopup: false
                 })}>Close</a>
+            </div>
+        </div>
+    }
+
+    getEditPopup = () => {
+        return <div className={"PopupItem"}>
+            <div style={{width: "900px"}} className={"PopupItemContent"}>
+                <h3>Edit sale</h3>
+
+                <div
+                    className={`SmartContractCreationSettingsRow`}>
+                    <div className={"SmartContractCreationSettingsRowTitle"}>
+                        <h4>Sell type</h4>
+                    </div>
+
+                    <div className={"SmartContractCreationSettingsRowInput"}>
+                        <ul>
+                            <li className={this.state.isTon ? 'active' : null}
+                                onClick={() => this.setState({isTon: true})}>{ton_icon} TON
+                            </li>
+                            <li className={!this.state.isTon ? 'active' : null}
+                                onClick={() => this.setState({isTon: false})}>Jetton
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className={"SmartContractCreationSettingsRow"}>
+                    <div className={"SmartContractCreationSettingsRowTitle"}>
+                        <h4>Price</h4>
+                    </div>
+
+                    <div className={"SmartContractCreationSettingsRowInput"}>
+                        <input name={'price'} value={this.state.price} onChange={this.onChange}
+                               placeholder={"NFT price"} type={'number'} min={0}/>
+                    </div>
+                </div>
+
+                {!this.state.isTon ? <div className={"SmartContractCreationSettingsRow"}>
+                    <div className={"SmartContractCreationSettingsRowTitle"}>
+                        <h4>Jetton Collection Address</h4>
+                    </div>
+
+                    <div className={"SmartContractCreationSettingsRowInput"}>
+                        <input name={'jettonCollectionAddress'} onChange={this.onChange}
+                               value={this.state.jettonCollectionAddress}
+                               placeholder={"Jetton address goes here"}
+                               type={'text'}/>
+                    </div>
+                </div> : null}
+
+                <div
+                    className={`SmartContractCreationSettingsRow ${this.state.displayMode === 'simple' ? 'hidden' : ''}`}>
+                    <div className={"SmartContractCreationSettingsRowTitle"}>
+                        <h4>Time limit</h4>
+                    </div>
+
+                    <div className={"SmartContractCreationSettingsRowInput"}>
+                        <input name={'limitedTime'} onChange={this.onChange}
+                               value={this.state.limitedTime}
+                               placeholder={"UNIX Time limit"}
+                               type={'number'}/>
+
+                        <ul style={{marginTop: "2rem"}}>
+                            <li onClick={() => this.setState({limitedTime: ((Date.now() / 1000) + (5 * 60)) * 1000})}>5
+                                minutes
+                            </li>
+                            <li onClick={() => this.setState({limitedTime: ((Date.now() / 1000) + (15 * 60)) * 1000})}>15
+                                minutes
+                            </li>
+                            <li onClick={() => this.setState({limitedTime: ((Date.now() / 1000) + (60 * 60)) * 1000})}>1
+                                hour
+                            </li>
+                            <li onClick={() => this.setState({limitedTime: ((Date.now() / 1000) + (60 * 60 * 24)) * 1000})}>1
+                                day
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+
+                <br/><br/>
+                <a style={{marginRight: "1rem"}} onClick={() => this.setState({
+                    showEditPopup: false
+                }, this.editSale)}>Save </a>
+
+                <a onClick={() => this.setState({
+                    showEditPopup: false
+                })}> Close</a>
             </div>
         </div>
     }
@@ -208,7 +288,15 @@ export default class SmartContractExplore extends Component {
                         is_ton: isTon,
                         my_jetton_address: my_jettonCs ? my_jettonCs.toString('base64', {bounceable: true}) : null,
                         limit_address: limitCs ? limitCs.toString('base64', {bounceable: true}) : null,
-                        end_at: end_at
+                        end_at: end_at,
+
+                        // for edit
+                        isTon: isTon,
+                        price: (parseInt(fullPrice) - parseInt(market_fee) - parseInt(royalty)) / 10**9,
+                        jettonCollectionAddress: "",
+                        limitedTime: parseInt(end_at),
+                        limitAddress: limitCs ? limitCs.toString('base64', {bounceable: true}) : ''
+
                     })
                 } catch (e) {
                     console.error(e)
@@ -241,9 +329,7 @@ export default class SmartContractExplore extends Component {
         if (this.provider.isTonWallet) {
             this.provider.send('ton_requestAccounts').then(x => {
                 this.setState({
-                    ownerAddress: x[0],
-                    wallet: 'TON Extension',
-                    isLoggedIn: true
+                    ownerAddress: x[0], wallet: 'TON Extension', isLoggedIn: true
                 })
             })
 
@@ -254,8 +340,7 @@ export default class SmartContractExplore extends Component {
 
     processNftContent = (url) => {
         fetch(url).then(data => data.json()).then(data => this.setState({
-            nftImage: data.image,
-            nftName: data.name
+            nftImage: data.image, nftName: data.name
         }))
     }
 
@@ -286,18 +371,40 @@ export default class SmartContractExplore extends Component {
             } else if (this.state.wallet === 'TON Extension') {
                 const provider = window.ton;
 
-                provider.send(
-                    'ton_sendTransaction',
-                    [{
-                        to: this.state.address,
-                        value: parseInt(this.state.full_price) + (0.06 * 10 ** 9),
-                        // stateInit: stateInitBase64,
-                        // data: payloadBase64,
-                        // dataType: "boc"
-                    }]
-                );
+                provider.send('ton_sendTransaction', [{
+                    to: this.state.address,
+                    value: parseInt(this.state.full_price) + (0.06 * 10 ** 9), // stateInit: stateInitBase64,
+                    // data: payloadBase64,
+                    // dataType: "boc"
+                }]);
 
             }
+        }
+    }
+
+    sendCell = (cell, price=0.03) => {
+        const payloadBOC = BOC.toBytesStandard(cell.cell());
+        const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
+
+        if (this.state.wallet === 'TonHub') {
+            const request = {
+                seed: this.state.tonHubSessionSeed, // Session Seed
+                appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
+                to: this.state.address, // Destination
+                value: price * 10 ** 9, // Amount in nano-tons
+                timeout: 5 * 60 * 1000, // 5 minute timeout
+                // stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
+                payload: payloadBase64
+            }
+
+            this.tonhubconnector.requestTransaction(request)
+        } else if (this.state.wallet === 'TON Extension') {
+            const provider = window.ton;
+
+            provider.send('ton_sendTransaction', [{
+                to: this.state.address, value: price * 10 ** 9, // stateInit: stateInitBase64,
+                data: payloadBase64, dataType: "boc"
+            }]);
         }
     }
 
@@ -306,243 +413,204 @@ export default class SmartContractExplore extends Component {
         const cell = new Builder()
         // cancel sale
         cell.storeUint(0x0000000b, 32)
-        const payloadBOC = BOC.toBytesStandard(cell.cell());
-        const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
-
-        if (this.state.wallet === 'TonHub') {
-            const request = {
-                seed: this.state.tonHubSessionSeed, // Session Seed
-                appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
-                to: this.state.address, // Destination
-                value: 0.03 * 10 ** 9, // Amount in nano-tons
-                timeout: 5 * 60 * 1000, // 5 minute timeout
-                // stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
-                payload: payloadBase64
-            }
-
-            this.tonhubconnector.requestTransaction(request)
-        } else if (this.state.wallet === 'TON Extension') {
-            const provider = window.ton;
-
-            provider.send(
-                'ton_sendTransaction',
-                [{
-                    to: this.state.address,
-                    value: 0.03 * 10 ** 9,
-                    // stateInit: stateInitBase64,
-                    data: payloadBase64,
-                    dataType: "boc"
-                }]
-            );
-        }
+        this.sendCell(cell);
     }
+
 
     sendNftOneMoreTime = () => {
         const cell = new Builder()
         // cancel sale
         cell.storeUint(0x000000a0, 32)
-        const payloadBOC = BOC.toBytesStandard(cell.cell());
-        const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
-
-        if (this.state.wallet === 'TonHub') {
-            const request = {
-                seed: this.state.tonHubSessionSeed, // Session Seed
-                appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
-                to: this.state.address, // Destination
-                value: 0.03 * 10 ** 9, // Amount in nano-tons
-                timeout: 5 * 60 * 1000, // 5 minute timeout
-                // stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
-                payload: payloadBase64
-            }
-
-            this.tonhubconnector.requestTransaction(request)
-        } else if (this.state.wallet === 'TON Extension') {
-            const provider = window.ton;
-
-            provider.send(
-                'ton_sendTransaction',
-                [{
-                    to: this.state.address,
-                    value: 0.03 * 10 ** 9,
-                    // stateInit: stateInitBase64,
-                    data: payloadBase64,
-                    dataType: "boc"
-                }]
-            );
-        }
+        this.sendCell(cell);
     }
 
     editSale = () => {
+        const priceConfig = new Builder()
+
+        priceConfig.storeUint(this.state.isTon ? 1 : 0, 1)
+        priceConfig.storeCoins(new Coins(this.state.price))
+
+        if (this.state.limitAddress !== '') {
+            priceConfig.storeAddress(new Address(this.state.limitAddress))
+        } else {
+            priceConfig.storeUint(0, 2)
+        }
+
+        priceConfig.storeUint(Math.round(this.state.limitedTime / 1000), 32)
+
+        // todo: calc address of jetton for this.state.address
+        priceConfig.storeUint(0, 2)
+
+        const editCommand = new Builder()
+        editCommand.storeUint(0x0000000a, 32)
+        editCommand.storeRef(priceConfig.cell())
+
+        this.sendCell(editCommand, 0.01);
     }
 
     render() {
-        return (
-            <div>
-                <br/>
-                <div className={"SmartContractCreationSettingsRowConfiguration"}>
-                    <div className={"SmartContractCreationSettingsRowInput"}>
-                        <ul>
-                            <li className={this.state.wallet === 'TON Extension' ? 'active' : null}
-                                onClick={this.loadTonWallet}>TON Extension
-                            </li>
-                            <li className={this.state.wallet === 'TonKeeper' ? 'active' : null}
-                                onClick={this.loginTonConnect}>TonKeeper
-                            </li>
-                            <li className={this.state.wallet === 'TonHub' ? 'active' : null}
-                                onClick={this.loginTonHub}>TonHub
-                            </li>
-                        </ul>
-                    </div>
+        return (<div>
+            <br/>
+            <div className={"SmartContractCreationSettingsRowConfiguration"}>
+                <div className={"SmartContractCreationSettingsRowInput"}>
+                    <ul>
+                        <li className={this.state.wallet === 'TON Extension' ? 'active' : null}
+                            onClick={this.loadTonWallet}>TON Extension
+                        </li>
+                        <li className={this.state.wallet === 'TonKeeper' ? 'active' : null}
+                            onClick={this.loginTonConnect}>TonKeeper
+                        </li>
+                        <li className={this.state.wallet === 'TonHub' ? 'active' : null}
+                            onClick={this.loginTonHub}>TonHub
+                        </li>
+                    </ul>
                 </div>
-
-                <div className={"TonExtensionStatus"}>
-                    {this.state.isLoggedIn ?
-                        <>
-                            <span className={"greenDot"}/>
-                            <p>{this.state.wallet} loaded</p>
-                        </> :
-                        <>
-                            <span className={"yellowDot"}/>
-                            <p>{this.state.wallet} unloaded</p>
-                        </>}
-                </div>
-
-                {this.state.showTonHubPopup ? this.getTonHubLogin() : null}
-
-                <div className="SmartContractExploreHeader">
-                    <h2>Sale contract</h2>
-                    <h3>{this.state.address}</h3>
-                </div>
-
-                {this.state.loaded ? <>
-                    <div className="SmartContractExploreHeaderInfo">
-                        <div className="SmartContractExploreHeaderInfoBlock">
-                            <p>Toncli code:</p>
-                            <p>{this.state.codeVerified ? 'verified ✅' : 'not-verified ❌'}</p>
-                        </div>
-
-                        <div className="SmartContractExploreHeaderInfoBlock">
-                            <p>Transactions count:</p>
-                            <p>{this.state.transactionsCount}</p>
-                        </div>
-
-                        <div className="SmartContractExploreHeaderInfoBlock">
-                            <p>Grams:</p>
-                            <p>{this.state.grams}</p>
-                        </div>
-                    </div>
-
-                    <div className="SmartContractExploreSmcFullBlock">
-                        <div className="SmartContractExploreSmcInfo">
-                            <h3>Contract state</h3>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Version:</p>
-                                <p>{this.state.version}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlockWithIcon">
-                                <p>Price:</p>
-                                <p>{this.state.full_price / 10 ** 9} {this.state.is_ton ? ton_icon : "Jetton"}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Currency:</p>
-                                <p>{this.state.is_ton ? ton_icon : "Jetton"}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Contract mode:</p>
-                                <p>{fixContractMode(this.state.mode)}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Is closed:</p>
-                                <p>{this.state.is_closed === "-1" ? "🔐" : "🔓"}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Marketplace:</p>
-                                <a href={`https://dton.io/a/${this.state.marketplace_address}`}>{fixBigAddress(this.state.marketplace_address)}</a>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>NFT Address:</p>
-                                <a href={`https://dton.io/a/${this.state.nft_address}`}>{fixBigAddress(this.state.nft_address)}</a>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Owner Address:</p>
-                                <a href={`https://dton.io/a/${this.state.owner_address}`}>{fixBigAddress(this.state.owner_address)}</a>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlockWithIcon">
-                                <p>Marketplace fee:</p>
-                                <p>{this.state.market_fee / 10 ** 9} {ton_icon}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Royalty Address:</p>
-                                <a href={`https://dton.io/a/${this.state.royalty_address}`}>{fixBigAddress(this.state.royalty_address)}</a>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlockWithIcon">
-                                <p>Royalty:</p>
-                                <p>{this.state.royalty / 10 ** 9} {ton_icon}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Sale Jetton Wallet Address:</p>
-                                <a href={`https://dton.io/a/${this.state.my_jetton_address}`}>{fixBigAddress(this.state.my_jetton_address)}</a>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Limit sale address for:</p>
-                                <a href={`https://dton.io/a/${this.state.limit_address}`}>{fixBigAddress(this.state.limit_address)}</a>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Limit time:</p>
-                                <p>{this.state.end_at !== "0" ? this.state.end_at : "Not limited"}</p>
-                            </div>
-                        </div>
-
-                        <div className="SmartContractExploreSmcShow">
-                            <h3>Sale info</h3>
-
-                            <div className="SmartContractExploreSmcShowNft">
-                                <div className="SmartContractExploreSmcShowNftImage"
-                                     style={{backgroundImage: `url(${this.state.nftImage})`}}/>
-                                <h3>{this.state.nftName}</h3>
-                            </div>
-
-                            {this.state.mode === "1" ?
-                                <div className="SmartContractExploreSmcShowAction">
-                                    <a onClick={this.processBuy}>💸 Buy</a>
-                                </div> : null}
-
-                            {this.state.mode === "1" ?
-                                <div className="SmartContractExploreSmcShowAction">
-                                    <a onClick={this.cancelSale}>✋🏻 Cancel sale</a>
-                                </div> : null}
-
-                            {this.state.mode === "3" || this.state.mode === "2" ?
-                                <div className="SmartContractExploreSmcShowAction">
-                                    <a onClick={this.sendNftOneMoreTime}>✈️ Send NFT</a>
-                                </div> : null}
-
-                            <div className="SmartContractExploreSmcShowAction">
-                                <a onClick={this.editSale}>🛠 Edit</a>
-                            </div>
-
-
-                        </div>
-                    </div>
-                </> : <div>
-                    <p>Loading...</p>
-                </div>}
-
             </div>
-        );
+
+            <div className={"TonExtensionStatus"}>
+                {this.state.isLoggedIn ? <>
+                    <span className={"greenDot"}/>
+                    <p>{this.state.wallet} loaded</p>
+                </> : <>
+                    <span className={"yellowDot"}/>
+                    <p>{this.state.wallet} unloaded</p>
+                </>}
+            </div>
+
+            {this.state.showTonHubPopup ? this.getTonHubLogin() : null}
+            {this.state.showEditPopup ? this.getEditPopup() : null}
+
+            <div className="SmartContractExploreHeader">
+                <h2>Sale contract</h2>
+                <h3>{this.state.address}</h3>
+            </div>
+
+            {this.state.loaded ? <>
+                <div className="SmartContractExploreHeaderInfo">
+                    <div className="SmartContractExploreHeaderInfoBlock">
+                        <p>Toncli code:</p>
+                        <p>{this.state.codeVerified ? 'verified ✅' : 'not-verified ❌'}</p>
+                    </div>
+
+                    <div className="SmartContractExploreHeaderInfoBlock">
+                        <p>Transactions count:</p>
+                        <p>{this.state.transactionsCount}</p>
+                    </div>
+
+                    <div className="SmartContractExploreHeaderInfoBlock">
+                        <p>Grams:</p>
+                        <p>{this.state.grams}</p>
+                    </div>
+                </div>
+
+                <div className="SmartContractExploreSmcFullBlock">
+                    <div className="SmartContractExploreSmcInfo">
+                        <h3>Contract state</h3>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Version:</p>
+                            <p>{this.state.version}</p>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlockWithIcon">
+                            <p>Price:</p>
+                            <p>{this.state.full_price / 10 ** 9} {this.state.is_ton ? ton_icon : "Jetton"}</p>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Currency:</p>
+                            <p>{this.state.is_ton ? ton_icon : "Jetton"}</p>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Contract mode:</p>
+                            <p>{fixContractMode(this.state.mode)}</p>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Is closed:</p>
+                            <p>{this.state.is_closed === "-1" ? "🔐" : "🔓"}</p>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Marketplace:</p>
+                            <a href={`https://dton.io/a/${this.state.marketplace_address}`}>{fixBigAddress(this.state.marketplace_address)}</a>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>NFT Address:</p>
+                            <a href={`https://dton.io/a/${this.state.nft_address}`}>{fixBigAddress(this.state.nft_address)}</a>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Owner Address:</p>
+                            <a href={`https://dton.io/a/${this.state.owner_address}`}>{fixBigAddress(this.state.owner_address)}</a>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlockWithIcon">
+                            <p>Marketplace fee:</p>
+                            <p>{this.state.market_fee / 10 ** 9} {ton_icon}</p>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Royalty Address:</p>
+                            <a href={`https://dton.io/a/${this.state.royalty_address}`}>{fixBigAddress(this.state.royalty_address)}</a>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlockWithIcon">
+                            <p>Royalty:</p>
+                            <p>{this.state.royalty / 10 ** 9} {ton_icon}</p>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Sale Jetton Wallet Address:</p>
+                            <a href={`https://dton.io/a/${this.state.my_jetton_address}`}>{fixBigAddress(this.state.my_jetton_address)}</a>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Limit sale address for:</p>
+                            <a href={`https://dton.io/a/${this.state.limit_address}`}>{fixBigAddress(this.state.limit_address)}</a>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Limit time:</p>
+                            <p>{this.state.end_at !== "0" ? this.state.end_at : "Not limited"}</p>
+                        </div>
+                    </div>
+
+                    <div className="SmartContractExploreSmcShow">
+                        <h3>Sale info</h3>
+
+                        <div className="SmartContractExploreSmcShowNft">
+                            <div className="SmartContractExploreSmcShowNftImage"
+                                 style={{backgroundImage: `url(${this.state.nftImage})`}}/>
+                            <h3>{this.state.nftName}</h3>
+                        </div>
+
+                        {this.state.mode === "1" ? <div className="SmartContractExploreSmcShowAction">
+                            <a onClick={this.processBuy}>💸 Buy</a>
+                        </div> : null}
+
+                        {this.state.mode === "1" ? <div className="SmartContractExploreSmcShowAction">
+                            <a onClick={this.cancelSale}>✋🏻 Cancel sale</a>
+                        </div> : null}
+
+                        {this.state.mode === "3" || this.state.mode === "2" ?
+                            <div className="SmartContractExploreSmcShowAction">
+                                <a onClick={this.sendNftOneMoreTime}>✈️ Send NFT</a>
+                            </div> : null}
+
+                        <div className="SmartContractExploreSmcShowAction">
+                            <a onClick={() => this.setState({showEditPopup: true})}>🛠 Edit</a>
+                        </div>
+
+
+                    </div>
+                </div>
+            </> : <div>
+                <p>Loading...</p>
+            </div>}
+
+        </div>);
     }
 }
