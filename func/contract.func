@@ -100,7 +100,7 @@
         int query_id = in_msg_body~load_uint(64);
         slice prev_owner_address = in_msg_body~load_msg_addr();
 
-        ;; We expect thet previus owner of nft is deployer of this contract
+        ;; We expect that previus owner of nft is deployer of this contract
         int deployer_is_prev_owner = equal_slices(prev_owner_address, deployer_address);
 
         ;; We expect NFT to be the same as in contract

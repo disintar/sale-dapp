@@ -20,11 +20,11 @@
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "stream": "npm:stream-browserify@3.0.0",
+    "text-encoding": "^0.7.0",
     "ton-x": "^2.0.0",
     "ton3-core": "^0.0.19",
     "util": "npm:util@0.12.5",
-    "web-vitals": "^2.1.4",
-    "text-encoding": "^0.7.0"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "deploy": "gh-pages -d build",
@@ -57,5 +57,6 @@
     ]
   },
   "devDependencies": {
+    "@tonconnect/sdk": "^0.0.39"
   }
 }

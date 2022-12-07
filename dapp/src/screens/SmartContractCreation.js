@@ -6,6 +6,7 @@ import {Address, Builder, Coins} from 'ton3-core'
 import QRCodeStyling from "qr-code-styling";
 import {TonhubConnector} from 'ton-x';
 import DeployOrSend from "../popups/DeployOrSend";
+import TonConnect from '@tonconnect/sdk';
 
 export default class SmartContractCreation extends Component {
     constructor(props) {
@@ -44,7 +45,8 @@ export default class SmartContractCreation extends Component {
 
 
             showTonHubPopup: false,
-            showTonKeeperPopup: false,
+            showTonconnectPopup: false,
+            tonconnectSessionLink: '',
             tonHubSessionLink: '',
             tonHubAppPublicKey: '',
             tonHubSessionSeed: '',
@@ -55,15 +57,21 @@ export default class SmartContractCreation extends Component {
 
         this.provider = {};
         this.tonhubconnector = new TonhubConnector();
+        this.tonconnect = new TonConnect();
+
+        this.tonconnect.onStatusChange(this.tonConnectHandler);
 
         this.qrGoesHere = new React.createRef();
+    }
+
+    tonConnectHandler = walletInfo => {
+        console.log(walletInfo)
     }
 
     componentDidMount() {
         setTimeout(() => {
             this.loadTonWallet()
         }, 1000)
-
     }
 
     loadTonWallet = () => {
@@ -205,6 +213,66 @@ export default class SmartContractCreation extends Component {
         </div>
     }
 
+    loginTonConnect = () => {
+        this.setState({
+            wallet: 'TonKeeper',
+            isLoggedIn: false,
+            showTonconnectPopup: true,
+            ownerAddress: ''
+        }, () => {
+            const walletConnectionSource = {
+                jsBridgeKey: 'tonkeeper'
+            }
+
+            this.tonconnect.getWallets().then(walletsList => {
+                if (walletsList[0].embedded) {
+                    this.tonconnect.connect({jsBridgeKey: walletsList[0].jsBridgeKey});
+                    return;
+                }
+
+                const tonkeeperConnectionSource = {
+                    universalLink: walletsList[0].universalLink,
+                    bridgeUrl: walletsList[0].bridgeUrl,
+                };
+
+                const universalLink = this.tonconnect.connect(tonkeeperConnectionSource);
+
+                this.setState({
+                    tonconnectSessionLink: universalLink
+                }, () => {
+                    const qrCode = new QRCodeStyling({
+                        width: 350,
+                        height: 350,
+                        margin: 10,
+                        image: "",
+                        data: universalLink,
+                        dotsOptions: {
+                            color: "white",
+                            type: "rounded",
+                        },
+                        imageOptions: {
+                            crossOrigin: "anonymous",
+                            margin: 10,
+                        },
+                        backgroundOptions: {
+                            color: "#1F1F1F"
+                        },
+                        cornersSquareOptions: {
+                            color: "white",
+                        },
+                    })
+
+                    if (this.qrGoesHere.current) {
+                        this.qrGoesHere.current.innerHTML = ''
+                        qrCode.append(this.qrGoesHere.current)
+                    }
+                })
+
+            })
+
+        })
+    }
+
     loginTonHub = () => {
         this.setState({
             showTonHubPopup: true,
@@ -283,6 +351,22 @@ export default class SmartContractCreation extends Component {
         </div>
     }
 
+    getTonconnectLogin = () => {
+        return <div className={"PopupItem"}>
+            <div className={"PopupItemContent"}>
+                <h3>Login with TonConnect</h3>
+                <div className={"QrCode"} ref={this.qrGoesHere}/>
+
+                <a onClick={() => {
+                    window.open(this.state.tonconnectSessionLink, '_blank');
+                }}>Open in app</a><br/><br/>
+                <a onClick={() => this.setState({
+                    showTonconnectPopup: false
+                })}>Close</a>
+            </div>
+        </div>
+    }
+
     render() {
         const dataCell = this.buildCell()
 
@@ -302,6 +386,7 @@ export default class SmartContractCreation extends Component {
         return <div>
 
             {this.state.showTonHubPopup ? this.getTonHubLogin() : null}
+            {this.state.showTonconnectPopup ? this.getTonconnectLogin() : null}
 
             <div className={"TonExtensionStatus"}>
                 {this.state.isLoggedIn ?
@@ -324,11 +409,7 @@ export default class SmartContractCreation extends Component {
                                     onClick={this.loadTonWallet}>TON Extension
                                 </li>
                                 <li className={this.state.wallet === 'TonKeeper' ? 'active' : null}
-                                    onClick={() => this.setState({
-                                        wallet: 'TonKeeper',
-                                        isLoggedIn: false,
-                                        ownerAddress: ''
-                                    })}>TonKeeper
+                                    onClick={this.loginTonConnect}>TonKeeper
                                 </li>
                                 <li className={this.state.wallet === 'TonHub' ? 'active' : null}
                                     onClick={this.loginTonHub}>TonHub

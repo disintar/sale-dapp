@@ -71,3 +71,40 @@
 .SmartContractExploreSmcInfoBlockWithIcon p:nth-child(2) {
     margin-left: 1rem;
 }
+
+.SmartContractExploreSmcFullBlock {
+    display: flex;
+}
+
+.SmartContractExploreSmcShow {
+    width: 50%;
+}
+
+.SmartContractExploreSmcShowNft {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+    width: 80%;
+    margin: 0 auto;
+}
+
+.SmartContractExploreSmcShowNftImage {
+    height: 250px;
+    background-position: center;
+    background-size: cover;
+    width: 250px;
+}
+
+.SmartContractExploreSmcShowAction {
+    font-size: 1.2rem;
+    text-align: center;
+    width: 100%;
+    display: block;
+}
+
+.SmartContractExploreSmcShowAction:hover {
+    border-bottom: 1px dashed;
+    cursor: pointer;
+}

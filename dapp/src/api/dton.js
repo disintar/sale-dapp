@@ -99,6 +99,25 @@ export default class dTonAPI {
         }, {fetchPolicy: "no-cache"})
     }
 
+
+    getNftContent = (address) => {
+        const tonAddress = new Address(address)
+        const rawAddress = tonAddress.toString('raw');
+
+
+        return this.client.query({
+            query: gql`{
+  transactions(
+    address: "${rawAddress.slice(2, rawAddress.length)}"
+    workchain: ${tonAddress.workchain}
+    page_size: 1
+  ) {
+    parsed_nft_content_offchain_url
+  }
+}`,
+        }, {fetchPolicy: "no-cache"})
+    }
+
     runGetMethod = (address, method, stack) => {
         const tonAddress = new Address(address)
         const rawAddress = tonAddress.toString('raw');

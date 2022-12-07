@@ -3,6 +3,8 @@ import '../styles/SmartContractExplore.css';
 import dTonAPI from "../api/dton";
 import {BOC} from "ton3-core";
 import {ton_icon} from "../icons";
+import {TonhubConnector} from "ton-x";
+import QRCodeStyling from "qr-code-styling";
 
 const parseAddressFromCs = bocBase64 => {
     const cell = BOC.fromStandard(Buffer.from(bocBase64, 'base64'))
@@ -48,12 +50,110 @@ export default class SmartContractExplore extends Component {
 
         this.state = {
             address: props.address,
-            loaded: false
+            loaded: false,
+            nftContent: '',
+            nftImage: '',
+            nftName: 'Loading...',
+
+            showTonHubPopup: false,
+            showTonconnectPopup: false,
+            tonconnectSessionLink: '',
+            tonHubSessionLink: '',
+            tonHubAppPublicKey: '',
+            tonHubSessionSeed: '',
+            tonHubAppEndpoint: '',
         }
 
         this.dton = new dTonAPI()
 
+        this.tonhubconnector = new TonhubConnector()
+        this.qrGoesHere = new React.createRef()
+
         this.updateContractInfo()
+    }
+
+    loginTonHub = () => {
+        this.setState({
+            showTonHubPopup: true,
+            wallet: 'TonHub',
+            isLoggedIn: false,
+            ownerAddress: ''
+        }, () => {
+            const connector = new TonhubConnector({network: 'mainnet'});
+            connector.createNewSession({
+                name: 'Disintar',
+                url: 'https://beta.disintar.io'
+            }).then((session) => {
+                this.setState({
+                    session: session
+                })
+
+                const qrCode = new QRCodeStyling({
+                    width: 350,
+                    height: 350,
+                    margin: 10,
+                    image: "",
+                    data: session.link,
+                    dotsOptions: {
+                        color: "white",
+                        type: "rounded",
+                    },
+                    imageOptions: {
+                        crossOrigin: "anonymous",
+                        margin: 10,
+                    },
+                    backgroundOptions: {
+                        color: "#1F1F1F"
+                    },
+                    cornersSquareOptions: {
+                        color: "white",
+                    },
+                })
+
+                if (this.qrGoesHere.current) {
+                    this.qrGoesHere.current.innerHTML = ''
+                    qrCode.append(this.qrGoesHere.current)
+                }
+
+                connector.awaitSessionReady(session.id, 5 * 60 * 1000).then((sessionConfirmed) => {
+                    if (sessionConfirmed.state === 'ready') {
+                        this.setState({
+                            ownerAddress: sessionConfirmed.wallet.address,
+                            isLoggedIn: true,
+                            tonHubAppPublicKey: sessionConfirmed.wallet.appPublicKey,
+                            tonHubSessionSeed: session.seed,
+                            tonHubAppEndpoint: sessionConfirmed.wallet.endpoint,
+                            showTonHubPopup: false
+                        })
+                    } else {
+                        throw new Error('Impossible');
+                    }
+                })
+            })
+
+        })
+    }
+
+    getTonHubLogin = () => {
+        return <div className={"PopupItem"}>
+            <div className={"PopupItemContent"}>
+                <h3>Login with TonHub</h3>
+                <div className={"QrCode"} ref={this.qrGoesHere}/>
+
+                <a onClick={() => {
+                    window.open(this.state.session.link, '_blank');
+                }}>Open in app</a><br/><br/>
+                <a onClick={() => this.setState({
+                    showTonHubPopup: false
+                })}>Close</a>
+            </div>
+        </div>
+    }
+
+    componentDidMount() {
+        setTimeout(() => {
+            this.loadTonWallet()
+        }, 1000)
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -87,18 +187,21 @@ export default class SmartContractExplore extends Component {
                     const limitCs = parseAddressFromCs(data.data.run_method.stack[9].value)
                     const end_at = data.data.run_method.stack[10].value
 
+                    this.dton.getNftContent(nftCs.toString('base64', {bounceable: true})).then(data => {
+                        this.processNftContent(data.data.transactions[0]['parsed_nft_content_offchain_url'])
+                    })
 
                     this.setState({
-                        marketplace_address: marketplaceCs ? marketplaceCs.toString() : null,
-                        nft_address: nftCs ? nftCs.toString() : null,
-                        owner_address: ownerAddr ? ownerAddr.toString() : null,
+                        marketplace_address: marketplaceCs ? marketplaceCs.toString('base64', {bounceable: true}) : null,
+                        nft_address: nftCs ? nftCs.toString('base64', {bounceable: true}) : null,
+                        owner_address: ownerAddr ? ownerAddr.toString('base64', {bounceable: true}) : null,
                         full_price: fullPrice,
                         market_fee: market_fee,
-                        royalty_address: royaltyCs ? royaltyCs.toString() : null,
+                        royalty_address: royaltyCs ? royaltyCs.toString('base64', {bounceable: true}) : null,
                         royalty: royalty,
                         is_ton: isTon,
-                        my_jetton_address: my_jettonCs ? my_jettonCs.toString() : null,
-                        limit_address: limitCs ? limitCs.toString() : null,
+                        my_jetton_address: my_jettonCs ? my_jettonCs.toString('base64', {bounceable: true}) : null,
+                        limit_address: limitCs ? limitCs.toString('base64', {bounceable: true}) : null,
                         end_at: end_at
                     })
                 } catch (e) {
@@ -126,6 +229,30 @@ export default class SmartContractExplore extends Component {
         })
     }
 
+    loadTonWallet = () => {
+        this.provider = window.ton
+
+        if (this.provider.isTonWallet) {
+            this.provider.send('ton_requestAccounts').then(x => {
+                this.setState({
+                    ownerAddress: x[0],
+                    wallet: 'TON Extension',
+                    isLoggedIn: true
+                })
+            })
+
+        }
+
+        this.forceUpdate()
+    }
+
+    processNftContent = (url) => {
+        fetch(url).then(data => data.json()).then(data => this.setState({
+            nftImage: data.image,
+            nftName: data.name
+        }))
+    }
+
     static getDerivedStateFromProps(props, state) {
         if (props.address !== state.address) {
             return {
@@ -139,6 +266,37 @@ export default class SmartContractExplore extends Component {
     render() {
         return (
             <div>
+                <br/>
+                <div className={"SmartContractCreationSettingsRowConfiguration"}>
+                    <div className={"SmartContractCreationSettingsRowInput"}>
+                        <ul>
+                            <li className={this.state.wallet === 'TON Extension' ? 'active' : null}
+                                onClick={this.loadTonWallet}>TON Extension
+                            </li>
+                            <li className={this.state.wallet === 'TonKeeper' ? 'active' : null}
+                                onClick={this.loginTonConnect}>TonKeeper
+                            </li>
+                            <li className={this.state.wallet === 'TonHub' ? 'active' : null}
+                                onClick={this.loginTonHub}>TonHub
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className={"TonExtensionStatus"}>
+                    {this.state.isLoggedIn ?
+                        <>
+                            <span className={"greenDot"}/>
+                            <p>{this.state.wallet} loaded</p>
+                        </> :
+                        <>
+                            <span className={"yellowDot"}/>
+                            <p>{this.state.wallet} unloaded</p>
+                        </>}
+                </div>
+
+                {this.state.showTonHubPopup ? this.getTonHubLogin() : null}
+
                 <div className="SmartContractExploreHeader">
                     <h2>Sale contract</h2>
                     <h3>{this.state.address}</h3>
@@ -162,13 +320,23 @@ export default class SmartContractExplore extends Component {
                         </div>
                     </div>
 
-                    <div>
+                    <div className="SmartContractExploreSmcFullBlock">
                         <div className="SmartContractExploreSmcInfo">
                             <h3>Contract state</h3>
 
                             <div className="SmartContractExploreSmcInfoBlock">
                                 <p>Version:</p>
                                 <p>{this.state.version}</p>
+                            </div>
+
+                            <div className="SmartContractExploreSmcInfoBlockWithIcon">
+                                <p>Price:</p>
+                                <p>{this.state.full_price / 10 ** 9} {this.state.is_ton ? ton_icon : "Jetton"}</p>
+                            </div>
+
+                            <div className="SmartContractExploreSmcInfoBlock">
+                                <p>Currency:</p>
+                                <p>{this.state.is_ton ? ton_icon : "Jetton"}</p>
                             </div>
 
                             <div className="SmartContractExploreSmcInfoBlock">
@@ -197,11 +365,6 @@ export default class SmartContractExplore extends Component {
                             </div>
 
                             <div className="SmartContractExploreSmcInfoBlockWithIcon">
-                                <p>Price:</p>
-                                <p>{this.state.full_price / 10 ** 9} {ton_icon}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlockWithIcon">
                                 <p>Marketplace fee:</p>
                                 <p>{this.state.market_fee / 10 ** 9} {ton_icon}</p>
                             </div>
@@ -214,11 +377,6 @@ export default class SmartContractExplore extends Component {
                             <div className="SmartContractExploreSmcInfoBlockWithIcon">
                                 <p>Royalty:</p>
                                 <p>{this.state.royalty / 10 ** 9} {ton_icon}</p>
-                            </div>
-
-                            <div className="SmartContractExploreSmcInfoBlock">
-                                <p>Sale:</p>
-                                <p>{this.state.is_ton ? ton_icon : "Jetton"}</p>
                             </div>
 
                             <div className="SmartContractExploreSmcInfoBlock">
@@ -235,6 +393,22 @@ export default class SmartContractExplore extends Component {
                                 <p>Limit time:</p>
                                 <p>{this.state.end_at !== "0" ? this.state.end_at : "Not limited"}</p>
                             </div>
+                        </div>
+
+                        <div className="SmartContractExploreSmcShow">
+                            <h3>Sale info</h3>
+
+                            <div className="SmartContractExploreSmcShowNft">
+                                <div className="SmartContractExploreSmcShowNftImage"
+                                     style={{backgroundImage: `url(${this.state.nftImage})`}}/>
+                                <h3>{this.state.nftName}</h3>
+                            </div>
+
+                            {this.state.mode === "1" ? <a className="SmartContractExploreSmcShowAction">💸 Buy</a> : null}<br/>
+                            {this.state.mode === "1" ? <a className="SmartContractExploreSmcShowAction">✋🏻 Cancel sale</a> : null}<br/>
+                            <a className="SmartContractExploreSmcShowAction">🛠 Edit</a><br/>
+
+
                         </div>
                     </div>
                 </> : <div>
