@@ -11,13 +11,17 @@
             .store_uint(0x10, 6) ;; nobounce
             .store_slice(to_address)
             .store_coins(amount)
-            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-            .store_uint(op, 32)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1)
+            .store_uint(1, 1);
+
+    var msgBody = begin_cell().store_uint(op, 32)
             .store_uint(query_id, 64);
 
     if (~ builder_null?(payload)) {
-        msg = msg.store_builder(payload);
+        msgBody = msgBody.store_builder(payload);
     }
+
+    msg = msg.store_ref(msgBody.end_cell());
 
     send_raw_message(msg.end_cell(), send_mode);
 }

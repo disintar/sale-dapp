@@ -2216,32 +2216,39 @@ PROGRAM{
   }>
   send_message PROCINLINE:<{
     //  to_address amount op query_id payload send_mode
-    0 PUSHINT	//  to_address amount op query_id payload send_mode _7=0
-    16 PUSHINT	//  to_address amount op query_id payload send_mode _7=0 _8=16
-    NEWC	//  to_address amount op query_id payload send_mode _7=0 _8=16 _9
-    6 STU	//  to_address amount op query_id payload send_mode _7=0 _11
-    s0 s7 XCHG2	//  _7=0 amount op query_id payload send_mode _11 to_address
-    STSLICER	//  _7=0 amount op query_id payload send_mode _12
-    s0 s5 XCHG2	//  _7=0 send_mode op query_id payload _12 amount
-    STVARUINT16	//  _7=0 send_mode op query_id payload _13
-    s1 s5 XCHG	//  payload send_mode op query_id _7=0 _13
-    107 STU	//  payload send_mode op query_id _27
-    s1 s2 XCHG	//  payload send_mode query_id op _27
-    32 STU	//  payload send_mode query_id _29
-    64 STU	//  payload send_mode msg
-    s2 PUSH	//  payload send_mode msg payload
-    ISNULL	//  payload send_mode msg _32
-    NOT	//  payload send_mode msg _33
-    IF:<{	//  payload send_mode msg
-      ROT	//  send_mode msg payload
-      STBR	//  send_mode msg
-      SWAP	//  msg send_mode
+    1 PUSHINT	//  to_address amount op query_id payload send_mode _7=1
+    0 PUSHINT	//  to_address amount op query_id payload send_mode _7=1 _8=0
+    16 PUSHINT	//  to_address amount op query_id payload send_mode _7=1 _8=0 _9=16
+    NEWC	//  to_address amount op query_id payload send_mode _7=1 _8=0 _9=16 _10
+    6 STU	//  to_address amount op query_id payload send_mode _7=1 _8=0 _12
+    s0 s8 XCHG2	//  _8=0 amount op query_id payload send_mode _7=1 _12 to_address
+    STSLICER	//  _8=0 amount op query_id payload send_mode _7=1 _13
+    s0 s6 XCHG2	//  _8=0 _7=1 op query_id payload send_mode _13 amount
+    STVARUINT16	//  _8=0 _7=1 op query_id payload send_mode _14
+    s1 s6 XCHG	//  send_mode _7=1 op query_id payload _8=0 _14
+    106 STU	//  send_mode _7=1 op query_id payload _26
+    s1 s4 XCHG	//  send_mode payload op query_id _7=1 _26
+    1 STU	//  send_mode payload op query_id msg
+    s0 s2 XCHG
+    NEWC	//  send_mode payload msg query_id op _30
+    32 STU	//  send_mode payload msg query_id _32
+    64 STU	//  send_mode payload msg msgBody
+    s2 PUSH	//  send_mode payload msg msgBody payload
+    ISNULL	//  send_mode payload msg msgBody _35
+    NOT	//  send_mode payload msg msgBody _36
+    IF:<{	//  send_mode payload msg msgBody
+      ROT	//  send_mode msg msgBody payload
+      STBR	//  send_mode msg msgBody
+      SWAP	//  send_mode msgBody msg
     }>ELSE<{
-      s2 POP	//  msg send_mode
+      s2 POP	//  send_mode msgBody msg
     }>
-    SWAP	//  send_mode msg
-    ENDC	//  send_mode _35
-    SWAP	//  _35 send_mode
+    SWAP	//  send_mode msg msgBody
+    ENDC	//  send_mode msg _38
+    SWAP	//  send_mode _38 msg
+    STREF	//  send_mode msg
+    ENDC	//  send_mode _40
+    SWAP	//  _40 send_mode
     SENDRAWMSG
   }>
   send_message_with_text PROCINLINE:<{
@@ -2280,11 +2287,20 @@ PROGRAM{
     }>
     1607220500 PUSHINT	//  nft_address new_owner_address forward_amount_real mode _10=1607220500
     0 PUSHINT	//  nft_address new_owner_address forward_amount_real mode _10=1607220500 _11=0
-    NEWC	//  nft_address new_owner_address forward_amount_real mode _10=1607220500 _11=0 _12
-    s0 s5 XCHG2	//  nft_address _11=0 forward_amount_real mode _10=1607220500 _12 new_owner_address
-    STSLICER	//  nft_address _11=0 forward_amount_real mode _10=1607220500 _13
+    s0 s0 PUSH2	//  nft_address new_owner_address forward_amount_real mode _10=1607220500 _11=0 _12=0 _13=0
+    NEWC	//  nft_address new_owner_address forward_amount_real mode _10=1607220500 _11=0 _12=0 _13=0 _14
+    s7 PUSH	//  nft_address new_owner_address forward_amount_real mode _10=1607220500 _11=0 _12=0 _13=0 _14 new_owner_address
+    STSLICER	//  nft_address new_owner_address forward_amount_real mode _10=1607220500 _11=0 _12=0 _13=0 _15
+    s0 s7 XCHG2	//  nft_address _13=0 forward_amount_real mode _10=1607220500 _11=0 _12=0 _15 new_owner_address
+    STSLICER	//  nft_address _13=0 forward_amount_real mode _10=1607220500 _11=0 _12=0 _16
+    s1 s6 XCHG	//  nft_address _12=0 forward_amount_real mode _10=1607220500 _11=0 _13=0 _16
+    1 STI	//  nft_address _12=0 forward_amount_real mode _10=1607220500 _11=0 _18
+    OVER	//  nft_address _12=0 forward_amount_real mode _10=1607220500 _11=0 _18 _19=0
+    STVARUINT16	//  nft_address _12=0 forward_amount_real mode _10=1607220500 _11=0 _20
+    s1 s5 XCHG	//  nft_address _11=0 forward_amount_real mode _10=1607220500 _12=0 _20
+    1 STI	//  nft_address _11=0 forward_amount_real mode _10=1607220500 _22
     s0 s3 XCHG2
-    s4 s1 s4 XCHG3	//  nft_address forward_amount_real _10=1607220500 _11=0 _13 mode
+    s4 s1 s4 XCHG3	//  nft_address forward_amount_real _10=1607220500 _11=0 _22 mode
     send_message INLINECALLDICT
   }>
   send_jettons_with_text PROCREF:<{
