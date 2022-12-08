@@ -102,11 +102,6 @@ export default class SmartContractCreation extends Component {
             // sell mode
             cell.storeUint(this.state.initMode, 8)
 
-            // if uninited - save time for unique address
-            if (this.state.initMode === 0) {
-                cell.storeUint(Math.round(this.state.loadTime / 1000), 32)
-            }
-
             // NFT address we want to sell
             if (this.state.nftAddress !== '') {
                 cell.storeAddress(new Address(this.state.nftAddress))
@@ -126,6 +121,11 @@ export default class SmartContractCreation extends Component {
                 cell.storeAddress(new Address(this.state.buyerAddress))
             } else {
                 cell.storeUint(0, 2)
+            }
+
+            // if uninited - save time for unique address
+            if (this.state.initMode === 0) {
+                cell.storeUint(Math.round(this.state.loadTime / 1000), 32)
             }
 
             const sellConfig = new Builder()
@@ -161,6 +161,12 @@ export default class SmartContractCreation extends Component {
             // to make address of smart contract predictable
             // we will provide real address of jetton wallet on deploy or configuration
             priceConfig.storeUint(0, 2)
+
+            if (this.state.jettonCollectionMintNew) {
+                priceConfig.storeUint(0, 2) // we will pass jetton master later
+            } else {
+                priceConfig.storeAddress(new Address(this.state.jettonCollectionAddress))
+            }
 
             cell.storeRef(priceConfig.cell())
 

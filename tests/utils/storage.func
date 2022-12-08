@@ -16,18 +16,19 @@ _ set_fake_data_ultimate(
         int price,
         slice limit_address,
         int limited_time,
-        slice jetton_address
+        slice jetton_address,
+        slice master_jetton
 ) impure {
     builder  main_data = begin_cell();
     main_data = store_uint(main_data, mode, 8); ;; sell mode
 
-    if (mode == 0) {
-        main_data = store_uint(main_data, now(), 32);
-    }
-
     main_data = store_slice(main_data, nft_address); ;; nft
     main_data = store_slice(main_data, owner_address); ;; owner
     main_data = store_slice(main_data, buyer); ;; buyer (addr none)
+
+    if (mode == 0) {
+        main_data = store_uint(main_data, now(), 32);
+    }
 
     builder sell_config = begin_cell();
 
@@ -49,6 +50,7 @@ _ set_fake_data_ultimate(
     price_config = store_slice(price_config, limit_address); ;; limited sale for specific user
     price_config = store_uint(price_config, limited_time, 32); ;; limited in time sale
     price_config = store_slice(price_config, jetton_address); ;; addr none - jetton wallet address
+    price_config = store_slice(price_config, master_jetton); ;; addr none - jetton master address
 
     cell price_config_cell = price_config.end_cell();
 
@@ -76,7 +78,8 @@ _ set_fake_sell_data(
             price, ;; price
             limit_address, ;; limit_address
             0, ;; limited_time
-            addr_null() ;; jetton_address
+            addr_null(), ;; jetton_address
+            addr_null() ;; master_jetton
     );
 }
 
@@ -95,6 +98,7 @@ _ set_init_fake_data() impure {
             one_ton * 100,
             addr_null(),
             0,
+            addr_null(),
             addr_null()
     );
 }

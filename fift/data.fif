@@ -19,7 +19,7 @@
 // 267 addr = 331 bits
 
 // Price config
-// 1 + 16 + 2 + 32 + 267 = 318 bits
+// 1 + 16 + 2 + 32 + 267 + 267 = 585 bits
 
 <b
    0 8 u, // mode
@@ -43,5 +43,6 @@
        0 32 u, // If sale is limited in time - define end time here
 
        0 2 u, // If jetton sale - wallet of jetton of this sale contract
+       0 2 u, // if jetton sale - master of jetton
    b> ref, // price & value config
 b>

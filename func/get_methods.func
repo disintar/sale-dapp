@@ -14,7 +14,7 @@ _ get_version() method_id {
 }
 
 ;; todo: add tests
-(slice, slice, slice, int, int, slice, int, int, slice, slice, int) get_sale_data() method_id {
+(slice, slice, slice, int, int, slice, int, int, slice, slice, int, slice) get_sale_data() method_id {
     (int mode,
             slice nft_address,
             slice deployer_address,
@@ -33,7 +33,8 @@ _ get_version() method_id {
             int price,
             slice limited_address,
             int end_at,
-            slice my_jetton_address) = parse_price_config(price_config);
+            slice my_jetton_address,
+            slice jetton_mater) = parse_price_config(price_config);
 
     int market_fee = 0;
     int royalty_fee = 0;
@@ -59,7 +60,8 @@ _ get_version() method_id {
             is_ton, ;; is_ton sale
             my_jetton_address, ;; jetton address
             limited_address, ;; limited for
-            end_at ;; limited to
+            end_at, ;; limited to
+            jetton_mater ;; jetton master address
     );
 }
 

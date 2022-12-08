@@ -79,46 +79,59 @@ export default class DeployOrSend extends Component {
             const cell = new Builder()
             // sell mode
             cell.storeUint(this.state.contractState.initMode, 8)
-
-            // if uninited - save time for unique address
-            if (this.state.contractState.initMode === 0) {
-                cell.storeUint(Math.round(this.state.contractState.loadTime / 1000), 32)
-            }
+            console.log("Start build cell with mode: ", this.state.contractState.initMode)
 
             // NFT address we want to sell
             if (this.state.nftAddress !== '') {
+                console.log("Store minted nft address", this.state.nftAddress)
                 cell.storeAddress(new Address(this.state.nftAddress))
             } else if (this.state.contractState.nftAddress !== '') {
+                console.log("Store real nft address", this.state.contractState.nftAddress)
                 cell.storeAddress(new Address(this.state.contractState.nftAddress))
             } else {
+                console.log("Store null nft address")
                 cell.storeUint(0, 2)
             }
 
             // NFT owner
             if (this.state.contractState.ownerAddress !== '') {
+                console.log("Store owner", this.state.contractState.ownerAddress)
                 cell.storeAddress(new Address(this.state.contractState.ownerAddress))
             } else {
+                console.log("Store null owner")
                 cell.storeUint(0, 2)
             }
 
             // NFT buyer
             if (this.state.contractState.buyerAddress !== '') {
+                console.log("Store buyer", this.state.contractState.buyerAddress)
                 cell.storeAddress(new Address(this.state.contractState.buyerAddress))
             } else {
+                console.log("Store null buyer")
                 cell.storeUint(0, 2)
+            }
+
+            // if uninited - save time for unique address
+            if (this.state.contractState.initMode === 0) {
+                console.log("Store random salt", Math.round(this.state.contractState.loadTime / 1000))
+                cell.storeUint(Math.round(this.state.contractState.loadTime / 1000), 32)
             }
 
             const sellConfig = new Builder()
 
             sellConfig.storeUint(this.state.contractState.marketplaceFeeNumerator, 16)
             sellConfig.storeUint(this.state.contractState.marketplaceFeeDenominator, 16)
+            console.log("Store marketplace fee", this.state.contractState.marketplaceFeeNumerator, this.state.contractState.marketplaceFeeDenominator)
 
             sellConfig.storeUint(this.state.contractState.royaltyFeeNumerator, 16)
             sellConfig.storeUint(this.state.contractState.royaltyFeeDenominator, 16)
+            console.log("Store royalty fee", this.state.contractState.royaltyFeeNumerator, this.state.contractState.royaltyFeeDenominator)
 
             if (this.state.contractState.royaltyAddress !== '') {
+                console.log("Store royalty destination", this.state.contractState.royaltyAddress)
                 sellConfig.storeAddress(new Address(this.state.contractState.royaltyAddress))
             } else {
+                console.log("Store null royalty destination")
                 sellConfig.storeUint(0, 2)
             }
 
@@ -126,21 +139,38 @@ export default class DeployOrSend extends Component {
 
             const priceConfig = new Builder()
 
+            console.log("Store isTon ", this.state.contractState.isTon)
             priceConfig.storeUint(this.state.contractState.isTon ? 1 : 0, 1)
+
+            console.log("Store price ", this.state.contractState.price)
             priceConfig.storeCoins(new Coins(this.state.contractState.price))
 
             if (this.state.contractState.limitAddress !== '') {
+                console.log("Store limit address", this.state.contractState.limitAddress)
                 priceConfig.storeAddress(new Address(this.state.contractState.limitAddress))
             } else {
+                console.log("Store null limit address")
                 priceConfig.storeUint(0, 2)
             }
 
+            console.log("Store limited time", Math.round(this.state.contractState.limitedTime / 1000))
             priceConfig.storeUint(Math.round(this.state.contractState.limitedTime / 1000), 32)
 
             // we always store address for jetton wallet of this smart contract as addr_none
             // to make address of smart contract predictable
             // we will provide real address of jetton wallet on deploy or configuration
             priceConfig.storeUint(0, 2)
+
+            if (this.state.contractState.jettonCollectionMintNew && this.state.jettonAddress && this.state.jettonAddress !== "") {
+                console.log("save minted jetton address", this.state.jettonAddress)
+                priceConfig.storeAddress(new Address(this.state.jettonAddress))
+            } else if (this.state.contractState.jettonCollectionAddress !== "") {
+                console.log("save jetton address", this.state.contractState.jettonCollectionAddress)
+                priceConfig.storeAddress(new Address(this.state.contractState.jettonCollectionAddress))
+            } else {
+                console.log("save null jetton address")
+                priceConfig.storeUint(0, 2) // not jetton sale
+            }
 
             cell.storeRef(priceConfig.cell())
             console.log("Data cell created: ", cell.cell().hash())
@@ -793,7 +823,8 @@ export default class DeployOrSend extends Component {
 
                 <br/>
                 <br/>
-                <a style={{cursor: "pointer"}} onClick={() => this.setState({stepInited: false}, this.processStep)}>One more time</a>
+                <a style={{cursor: "pointer"}} onClick={() => this.setState({stepInited: false}, this.processStep)}>One
+                    more time</a>
             </div>
 
 

@@ -153,6 +153,13 @@
 
                 ;; TODO: add tests
                 cell new_price_config = in_msg_body~load_ref();
+
+                ;; Want to be 100% sure that we can parse price config after we will save it to c4
+                ;; So nobody could fucked up smart contract after update
+                ;; parse function is not impure, but we can use impure_touch
+                (int is_ton, _, _, _, _, _) = parse_price_config(price_config);
+                is_ton~impure_touch();
+
                 store_data(1,
                         nft_address,
                         deployer_address,
@@ -199,7 +206,8 @@
                     int price,
                     slice limited_address,
                     int end_at,
-                    slice my_jetton_address) = parse_price_config(price_config);
+                    slice my_jetton_address,
+                    slice jetton_master) = parse_price_config(price_config);
 
             int market_fee = 0;
             int royalty_fee = 0;
@@ -331,27 +339,40 @@
                         int amount = in_msg_body~load_coins();
                         slice sender = in_msg_body~load_msg_addr();
 
-                        ;; TODO: think if it's possible to transfer jettons back with 1 fwd_fee
+                        int magic_gas = 20000000;
+
                         ;; Ensure, that we have enough money for transfer
-                        int nalogi = fwd_fee * 4;
+                        int nalogi = (fwd_fee + magic_gas) * 4;
                         int new_fwd_amount = msg_value - nalogi - little_gas_amount;
-                        throw_unless(57, new_fwd_amount > 0);
+
+                        ;; TODO: test this
+                        if (new_fwd_amount <= 0) {
+                            int nalogi_little = (fwd_fee + magic_gas);
+                            int new_fwd_amount_little = msg_value - nalogi_little - little_gas_amount;
+
+                            if (new_fwd_amount_little >= 0) {
+                                send_jettons_with_text(message_from, sender, new_fwd_amount_little + fwd_fee + magic_gas, amount, "Not enought tons 🌚");
+                                throw(0);
+                            } else {
+                                throw(57);
+                            }
+                        }
 
                         ;; Buy with JETTON!
                         int change = amount - price - royalty_fee - market_fee;
                         if (change < 0) {
-                            send_jettons_with_text(message_from, sender, new_fwd_amount + fwd_fee, amount, "Not enought jettons 🌚");
+                            send_jettons_with_text(message_from, sender, new_fwd_amount + fwd_fee + magic_gas, amount, "Not enought jettons 🌚");
                             throw(0);
                         } else {
-                            send_jettons_with_text(message_from, marketplace, fwd_fee, market_fee, "Market fee 💫");
-                            send_jettons_with_text(message_from, royalty_destanation, fwd_fee, royalty_fee, "Your royalty 🍁");
+                            send_jettons_with_text(message_from, marketplace, fwd_fee + magic_gas, market_fee, "Market fee 💫");
+                            send_jettons_with_text(message_from, royalty_destanation, fwd_fee + magic_gas, royalty_fee, "Your royalty 🍁");
 
                             tuple wow = unsafe_to_tuple(["⚡️", "🪐", "💥", "🌈", "🌪"]);
                             int wow_num = rand(5);
-                            send_jettons_with_text(message_from, deployer_address, fwd_fee, price, wow.at(wow_num));
+                            send_jettons_with_text(message_from, deployer_address, fwd_fee + magic_gas, price, wow.at(wow_num));
 
                             if (change > 0) {
-                                send_jettons_with_text(message_from, sender, fwd_fee, change, "Your change sir 😼");
+                                send_jettons_with_text(message_from, sender, fwd_fee + magic_gas, change, "Your change sir 😼");
                             }
 
                             raw_reserve(100000, 0); ;; save little ammount

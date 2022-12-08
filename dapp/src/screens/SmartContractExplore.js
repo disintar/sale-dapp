@@ -75,8 +75,6 @@ export default class SmartContractExplore extends Component {
 
         this.tonhubconnector = new TonhubConnector()
         this.qrGoesHere = new React.createRef()
-
-        this.updateContractInfo()
     }
 
     onChange = (item) => {
@@ -237,6 +235,8 @@ export default class SmartContractExplore extends Component {
     }
 
     componentDidMount() {
+        this.updateContractInfo()
+
         setTimeout(() => {
             this.loadTonWallet()
         }, 1000)
@@ -270,6 +270,7 @@ export default class SmartContractExplore extends Component {
                     const royalty = data.data.run_method.stack[6].value
                     const isTon = data.data.run_method.stack[7].value
                     const my_jettonCs = parseAddressFromCs(data.data.run_method.stack[8].value)
+                    const my_jettonMasterCs = parseAddressFromCs(data.data.run_method.stack[11].value)
                     const limitCs = parseAddressFromCs(data.data.run_method.stack[9].value)
                     const end_at = data.data.run_method.stack[10].value
 
@@ -285,14 +286,15 @@ export default class SmartContractExplore extends Component {
                         market_fee: parseInt(market_fee),
                         royalty_address: royaltyCs ? royaltyCs.toString('base64', {bounceable: true}) : null,
                         royalty: parseInt(royalty),
-                        is_ton: isTon,
+                        is_ton: isTon === "1",
+                        my_jetton_master_address: my_jettonMasterCs ? my_jettonMasterCs.toString('base64', {bounceable: true}) : null,
                         my_jetton_address: my_jettonCs ? my_jettonCs.toString('base64', {bounceable: true}) : null,
                         limit_address: limitCs ? limitCs.toString('base64', {bounceable: true}) : null,
                         end_at: end_at,
 
                         // for edit
-                        isTon: isTon,
-                        price: (parseInt(fullPrice) - parseInt(market_fee) - parseInt(royalty)) / 10**9,
+                        isTon: isTon === "1",
+                        price: (parseInt(fullPrice) - parseInt(market_fee) - parseInt(royalty)) / 10 ** 9,
                         jettonCollectionAddress: "",
                         limitedTime: parseInt(end_at),
                         limitAddress: limitCs ? limitCs.toString('base64', {bounceable: true}) : ''
@@ -379,10 +381,40 @@ export default class SmartContractExplore extends Component {
                 }]);
 
             }
+        } else {
+            // transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
+            //      response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+            //      forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+            //      = InternalMsgBody;
+
+            this.dton.calculateJettonAddress(this.state.my_jetton_master_address, this.state.ownerAddress).then(dtonAnswer => {
+                const jettonWalletAddress = dtonAnswer.data.getJettonWalletAddress
+
+                const cell = new Builder()
+                // cancel sale
+                cell.storeUint(0x0f8a7ea5, 32)
+                cell.storeUint(0, 64)
+                cell.storeCoins(new Coins(this.state.price))
+                cell.storeAddress(new Address(this.state.address))
+                cell.storeAddress(new Address(this.state.address))
+                cell.storeUint(0, 1)
+                cell.storeCoins(new Coins(0.12))
+                cell.storeUint(0, 1)
+
+                this.sendCell(cell, 0.16, jettonWalletAddress);
+            })
         }
     }
 
-    sendCell = (cell, price=0.03) => {
+    sendCell = (cell, price = 0.03, destination = null) => {
+        let realDestination
+
+        if (destination) {
+            realDestination = destination
+        } else {
+            realDestination = this.state.address
+        }
+
         const payloadBOC = BOC.toBytesStandard(cell.cell());
         const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
 
@@ -390,7 +422,7 @@ export default class SmartContractExplore extends Component {
             const request = {
                 seed: this.state.tonHubSessionSeed, // Session Seed
                 appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
-                to: this.state.address, // Destination
+                to: realDestination, // Destination
                 value: price * 10 ** 9, // Amount in nano-tons
                 timeout: 5 * 60 * 1000, // 5 minute timeout
                 // stateInit: stateInitBase64, // Optional serialized to base64 string state_init cell
@@ -402,8 +434,10 @@ export default class SmartContractExplore extends Component {
             const provider = window.ton;
 
             provider.send('ton_sendTransaction', [{
-                to: this.state.address, value: price * 10 ** 9, // stateInit: stateInitBase64,
-                data: payloadBase64, dataType: "boc"
+                to: realDestination,
+                value: price * 10 ** 9, // stateInit: stateInitBase64,
+                data: payloadBase64,
+                dataType: "boc"
             }]);
         }
     }
@@ -427,7 +461,12 @@ export default class SmartContractExplore extends Component {
     editSale = () => {
         const priceConfig = new Builder()
 
-        priceConfig.storeUint(this.state.isTon ? 1 : 0, 1)
+        if (this.state.jettonCollectionAddress !== "") {
+            priceConfig.storeUint(0, 1)
+        } else {
+            priceConfig.storeUint(1, 1)
+        }
+
         priceConfig.storeCoins(new Coins(this.state.price))
 
         if (this.state.limitAddress !== '') {
@@ -438,14 +477,30 @@ export default class SmartContractExplore extends Component {
 
         priceConfig.storeUint(Math.round(this.state.limitedTime / 1000), 32)
 
-        // todo: calc address of jetton for this.state.address
-        priceConfig.storeUint(0, 2)
+        if (this.state.jettonCollectionAddress !== "") {
+            const masterAddress = new Address(this.state.jettonCollectionAddress)
 
-        const editCommand = new Builder()
-        editCommand.storeUint(0x0000000a, 32)
-        editCommand.storeRef(priceConfig.cell())
+            this.dton.calculateJettonAddress(this.state.jettonCollectionAddress, this.state.address).then(dtonAnswer => {
+                const jettonWalletAddress = new Address(dtonAnswer.data.getJettonWalletAddress)
+                priceConfig.storeAddress(jettonWalletAddress)
+                priceConfig.storeAddress(masterAddress)
 
-        this.sendCell(editCommand, 0.01);
+                const editCommand = new Builder()
+                editCommand.storeUint(0x0000000a, 32)
+                editCommand.storeRef(priceConfig.cell())
+
+                this.sendCell(editCommand, 0.01);
+            })
+        } else {
+            priceConfig.storeUint(0, 2)
+
+            const editCommand = new Builder()
+            editCommand.storeUint(0x0000000a, 32)
+            editCommand.storeRef(priceConfig.cell())
+
+            this.sendCell(editCommand, 0.01);
+        }
+
     }
 
     render() {
@@ -565,6 +620,11 @@ export default class SmartContractExplore extends Component {
                         <div className="SmartContractExploreSmcInfoBlock">
                             <p>Sale Jetton Wallet Address:</p>
                             <a href={`https://dton.io/a/${this.state.my_jetton_address}`}>{fixBigAddress(this.state.my_jetton_address)}</a>
+                        </div>
+
+                        <div className="SmartContractExploreSmcInfoBlock">
+                            <p>Sale Jetton Master Address:</p>
+                            <a href={`https://dton.io/a/${this.state.my_jetton_master_address}`}>{fixBigAddress(this.state.my_jetton_master_address)}</a>
                         </div>
 
                         <div className="SmartContractExploreSmcInfoBlock">

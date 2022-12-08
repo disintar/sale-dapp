@@ -9,15 +9,16 @@
     ;; 3 - Closed, seller was canceled
     int current_mode = data~load_uint(8);
 
+    ;; NFT which we want to sell
+    slice nft_address = data~load_msg_addr();
+    slice deployer = data~load_msg_addr();
+    slice buyer = data~load_msg_addr();
+
     if (current_mode == 0) {
         ;; While uninicialize need to skip unixtime
         data~skip_bits(32);
     }
 
-    ;; NFT which we want to sell
-    slice nft_address = data~load_msg_addr();
-    slice deployer = data~load_msg_addr();
-    slice buyer = data~load_msg_addr();
     cell sell_config = data~load_ref();
     cell price_config = data~load_ref();
     data.end_parse(); ;; 100% sure no data in data
@@ -42,6 +43,11 @@
     b = store_slice(b, nft_address);
     b = store_slice(b, deployer);
     b = store_slice(b, buyer);
+
+    if (current_mode == 0) {
+        b = store_uint(b, 0, 32);
+    }
+
     b = store_ref(b, sell_config);
     b = store_ref(b, price_config);
 
@@ -67,21 +73,21 @@
             royalty_destanation);
 }
 
-(int, int, slice, int, slice) parse_price_config(cell price_config){
+(int, int, slice, int, slice, slice) parse_price_config(cell price_config){
     slice price_config_cs = price_config.begin_parse();
     int is_ton = price_config_cs~load_uint(1);
     int price = price_config_cs~load_grams();
     slice limited_address = price_config_cs~load_msg_addr();
     int end_time = price_config_cs~load_uint(32);
     slice my_jetton_address = price_config_cs~load_msg_addr();
-
+    slice jetton_master_address = price_config_cs~load_msg_addr();
     price_config_cs.end_parse();
 
-    return (is_ton, price, limited_address, end_time, my_jetton_address);
+    return (is_ton, price, limited_address, end_time, my_jetton_address, jetton_master_address);
 }
 
 cell repack_price_config_with_jetton_address(cell price_config, slice jetton_address){
-    (_, int price, slice limited_address, int end_time, _) = parse_price_config(price_config);
+    (_, int price, slice limited_address, int end_time, _, slice jetton_master) = parse_price_config(price_config);
 
     builder new_price_config = begin_cell();
     new_price_config = store_uint(new_price_config, 0, 1);
@@ -89,6 +95,7 @@ cell repack_price_config_with_jetton_address(cell price_config, slice jetton_add
     new_price_config = store_slice(new_price_config, limited_address);
     new_price_config = store_uint(new_price_config, end_time, 32);
     new_price_config = store_slice(new_price_config, jetton_address);
+    new_price_config = store_slice(new_price_config, jetton_master);
 
     return new_price_config.end_cell();
 }
