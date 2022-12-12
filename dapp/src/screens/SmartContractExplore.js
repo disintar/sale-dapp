@@ -396,11 +396,11 @@ export default class SmartContractExplore extends Component {
                 cell.storeUint(0, 64)
                 cell.storeCoins(new Coins(this.state.price))
                 cell.storeAddress(new Address(this.state.address))
-                cell.storeAddress(new Address(this.state.address))
+                cell.storeUint(0, 2)
                 cell.storeUint(0, 1)
-                cell.storeCoins(new Coins(0.15))
+                cell.storeCoins(new Coins(0.26))
                 cell.storeUint(0, 1)
-                this.sendCell(cell, 0.2, jettonWalletAddress);
+                this.sendCell(cell, 0.3, jettonWalletAddress);
             })
         }
     }
@@ -455,6 +455,53 @@ export default class SmartContractExplore extends Component {
         // cancel sale
         cell.storeUint(0x000000a0, 32)
         this.sendCell(cell);
+    }
+
+    sendNFTToSeller = () => {
+        const message = new Builder();
+        message.storeUint(0x5fcc3d14, 32)
+        message.storeUint(228, 64) // query id
+        message.storeAddress(new Address(this.state.address))
+        message.storeAddress(new Address(this.state.ownerAddress))
+        message.storeUint(0, 1) // custom payload
+        message.storeCoins(new Coins(0.01)) // forward amount
+        message.storeUint(0, 32)
+
+
+        const payloadBOC = BOC.toBytesStandard(message.cell())
+        const payloadBase64 = Buffer.from(payloadBOC).toString('base64')
+
+        const amount = 0.05 * 10 ** 9
+
+        if (this.state.wallet === 'TonHub') {
+            const request = {
+                seed: this.state.tonHubSessionSeed, // Session Seed
+                appPublicKey: this.state.tonHubAppPublicKey, // Wallet's app public key
+                to: this.state.nft_address, // Destination
+                value: amount, // Amount in nano-tons
+                timeout: 5 * 60 * 1000, // 5 minute timeout
+                payload: payloadBase64
+            };
+            const connector = new TonhubConnector({network: "mainnet"});
+            connector.requestTransaction(request).then(response => {
+                if (response.type !== 'success') {
+                    this.setState({error: 'Problems with your tonhub session. Please try to relogin'})
+                }
+            })
+
+        } else if (this.state.wallet === 'TON Extension') {
+            const provider = window.ton;
+
+            provider.send(
+                'ton_sendTransaction',
+                [{
+                    to: this.state.nft_address,
+                    value: amount.toString(),
+                    data: payloadBase64,
+                    dataType: "boc"
+                }]
+            );
+        }
     }
 
     editSale = () => {
@@ -657,6 +704,11 @@ export default class SmartContractExplore extends Component {
                         {this.state.mode === "3" || this.state.mode === "2" ?
                             <div className="SmartContractExploreSmcShowAction">
                                 <a onClick={this.sendNftOneMoreTime}>✈️ Send NFT</a>
+                            </div> : null}
+
+                        {this.state.mode === "0" ?
+                            <div className="SmartContractExploreSmcShowAction">
+                                <a onClick={this.sendNFTToSeller}>😎 Send NFT</a>
                             </div> : null}
 
                         <div className="SmartContractExploreSmcShowAction">
