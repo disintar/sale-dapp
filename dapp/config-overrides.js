@@ -1,4 +1,4 @@
-const {ProvidePlugin} = require('webpack');
+const {ProvidePlugin, IgnorePlugin} = require('webpack');
 
 module.exports = function (config, env) {
     config.module.rules.unshift({
@@ -18,6 +18,11 @@ module.exports = function (config, env) {
             process: 'process/browser',
             Buffer: ['buffer', 'Buffer'],
         }),
+
+        new IgnorePlugin({
+            resourceRegExp: /.*$/,
+            contextRegExp: /ton3-core$/
+        })
     );
 
     return config;
