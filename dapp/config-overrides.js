@@ -20,7 +20,6 @@ module.exports = function (config, env) {
         }),
 
         new IgnorePlugin({
-            resourceRegExp: /.*$/,
             contextRegExp: /ton3-core$/
         })
     );

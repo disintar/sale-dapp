@@ -400,7 +400,6 @@ export default class SmartContractExplore extends Component {
                 cell.storeUint(0, 1)
                 cell.storeCoins(new Coins(0.15))
                 cell.storeUint(0, 1)
-
                 this.sendCell(cell, 0.2, jettonWalletAddress);
             })
         }
