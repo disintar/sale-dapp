@@ -1,9 +1,10 @@
 ;; Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
 
-const little_gas_amount = 60000000; ;; (0.06 TON) (gas for computations and
+;; (0.06 TON) gas for computations of current smart contract in bad way
+const little_gas_amount = 60000000;
 const one_ton = 1000000000;
 const slice marketplace = "EQDrLq-X6jKZNHAScgghh0h1iog3StK71zn8dcmrOj8jPWRA"a;
 
 ;; magic gas depend on token
 ;; it's needed to calculate token stuff & fwd message to owner of wallet
-const magic_gas = 30000000; ;; (0.03 TON)
+const magic_gas = 50000000; ;; (0.05 TON)

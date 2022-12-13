@@ -396,11 +396,11 @@ export default class SmartContractExplore extends Component {
                 cell.storeUint(0, 64)
                 cell.storeCoins(new Coins(this.state.price))
                 cell.storeAddress(new Address(this.state.address))
-                cell.storeUint(0, 2)
+                cell.storeAddress(new Address(this.state.ownerAddress))
                 cell.storeUint(0, 1)
-                cell.storeCoins(new Coins(0.26))
+                cell.storeCoins(new Coins(0.36))
                 cell.storeUint(0, 1)
-                this.sendCell(cell, 0.3, jettonWalletAddress);
+                this.sendCell(cell, 0.4, jettonWalletAddress);
             })
         }
     }

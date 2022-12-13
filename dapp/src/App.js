@@ -120,7 +120,7 @@ export default class App extends Component {
     render() {
 
         return <div className="App">
-            <h1>dApp: NFT sale</h1>
+            <h1>TON dApp: NFT sale</h1>
             <ul className={"NastyMenu"}>
                 <li className={this.state.mode === 'app' ? "active" : null}
                     onClick={() => this.updateLocation('mode', 'app')}>🎮 dApp
@@ -144,7 +144,7 @@ export default class App extends Component {
                 textAlign: "center",
                 paddingBottom: "4rem"
             }}>
-                <p>©2022 Disintar LLP</p>
+                <p>©2022 Disintar LLP / <a className={"github"} href={"https://github.com/disintar/sale-dapp"}>GitHub of this dApp</a></p>
             </div>
         </div>
     }

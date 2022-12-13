@@ -37,6 +37,12 @@
     border-bottom: 1px dashed white;
 }
 
+.github{
+    text-decoration: none;
+    color: white;
+    border-bottom: 1px dashed white;
+}
+
 
 .App-header {
     display: flex;

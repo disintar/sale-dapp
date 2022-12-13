@@ -360,7 +360,13 @@
                             int new_fwd_amount_little = msg_value - nalogi_little;
 
                             if (new_fwd_amount_little >= 0) {
-                                send_jettons_with_text(message_from, sender, fwd_fee * 2 + magic_gas, 1, amount, "Not enought tons 🌚");
+                                send_jettons_with_text(message_from,
+                                        sender,
+                                        fwd_fee * 2 + magic_gas,
+                                        1,
+                                        amount,
+                                        "Not enought tons 🌚",
+                                        sender);
                                 throw(0);
                             } else {
                                 throw(57);
@@ -369,25 +375,55 @@
 
                         ;; Buy with JETTON!
                         if (change < 0) {
-                            send_jettons_with_text(message_from, sender, new_fwd_amount + fwd_fee + magic_gas, new_fwd_amount, amount, "Not enought jettons 🌚");
+                            send_jettons_with_text(message_from,
+                                    sender,
+                                    new_fwd_amount + fwd_fee + magic_gas,
+                                    1,
+                                    amount,
+                                    "Not enought jettons 🌚",
+                                    sender);
                             throw(0);
                         } else {
                             int devided_fwd = muldiv(new_fwd_amount, 1, msg_cnt);
 
                             if (market_fee > 0) {
-                                send_jettons_with_text(message_from, marketplace, fwd_fee + devided_fwd + magic_gas, devided_fwd, market_fee, "Market fee 💫");
+                                send_jettons_with_text(message_from,
+                                        marketplace,
+                                        fwd_fee + devided_fwd + magic_gas,
+                                        devided_fwd,
+                                        market_fee,
+                                        "Market fee 💫",
+                                        sender);
                             }
 
                             if (royalty_fee > 0) {
-                                send_jettons_with_text(message_from, royalty_destanation, fwd_fee + devided_fwd + magic_gas, devided_fwd, royalty_fee, "Your royalty 🍁");
+                                send_jettons_with_text(message_from,
+                                        royalty_destanation,
+                                        fwd_fee + devided_fwd + magic_gas,
+                                        devided_fwd,
+                                        royalty_fee,
+                                        "Your royalty 🍁",
+                                        sender);
                             }
 
                             tuple wow = unsafe_to_tuple(["⚡️", "🪐", "💥", "🌈", "🌪"]);
                             int wow_num = rand(5);
-                            send_jettons_with_text(message_from, deployer_address, fwd_fee + devided_fwd + magic_gas, devided_fwd, price, wow.at(wow_num));
+                            send_jettons_with_text(message_from,
+                                    deployer_address,
+                                    fwd_fee + devided_fwd + magic_gas,
+                                    devided_fwd,
+                                    price,
+                                    wow.at(wow_num),
+                                    sender);
 
                             if (change > 0) {
-                                send_jettons_with_text(message_from, sender, fwd_fee + devided_fwd + magic_gas, devided_fwd, change, "Your change sir 😼");
+                                send_jettons_with_text(message_from,
+                                        sender,
+                                        fwd_fee + devided_fwd + magic_gas,
+                                        1,
+                                        change,
+                                        "Your change sir 😼",
+                                        sender);
                             }
 
                             raw_reserve(100000, 0); ;; save little ammount

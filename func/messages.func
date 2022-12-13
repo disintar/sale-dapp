@@ -68,7 +68,7 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
 }
 
 
-() send_jettons_with_text(slice src, slice dest, int send_ton_amount, int forward_ton_amount, int amount, slice text) impure inline_ref {
+() send_jettons_with_text(slice src, slice dest, int send_ton_amount, int forward_ton_amount, int amount, slice text, var change) impure inline_ref {
     ;;     transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
     ;;                  response_destination:MsgAddress custom_payload:(Maybe ^Cell)
     ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
@@ -78,7 +78,13 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
     builder transfer_message = begin_cell();
     transfer_message = store_coins(transfer_message, amount);
     transfer_message = store_slice(transfer_message, dest);
-    transfer_message = store_uint(transfer_message, 0, 2);
+
+    ifnot (is_null(change)){
+        transfer_message = store_slice(transfer_message, change);
+    } else {
+        transfer_message = store_uint(transfer_message, 0, 2);
+    }
+
     transfer_message = store_uint(transfer_message, 0, 1);
     ;; Save little amount on gas consumation
     transfer_message = store_grams(transfer_message, forward_ton_amount);
@@ -117,7 +123,7 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
         int amount = in_msg_body~load_coins();
         slice sender = in_msg_body~load_msg_addr();
 
-        send_jettons_with_text(message_from, sender, new_fwd_amount + fwd_fee, new_fwd_amount, amount, text);
+        send_jettons_with_text(message_from, sender, new_fwd_amount + fwd_fee, new_fwd_amount, amount, text, null());
         throw(0);
     } else {
         send_money_back(message_from, msg_value, fwd_fee, text);
