@@ -144,7 +144,7 @@ export default class App extends Component {
                 textAlign: "center",
                 paddingBottom: "4rem"
             }}>
-                <p>©2022 Disintar LLP / <a className={"github"} href={"https://github.com/disintar/sale-dapp"}>GitHub of this dApp</a></p>
+                <p>©2023 Disintar LLP / <a className={"github"} href={"https://github.com/disintar/sale-dapp"}>GitHub of this dApp</a></p>
             </div>
         </div>
     }

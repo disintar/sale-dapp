@@ -60,4 +60,4 @@ Each commit will trigger action to run docker, that will push builded JS code to
 
 ### Smart Contract License
 
-Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+Copyright (c) 2022-2023 Disintar LLP Licensed under the Business Source License 1.1

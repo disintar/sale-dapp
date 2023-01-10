@@ -1,0 +1,38 @@
+[int, int, slice, slice, cell, int, cell] parse_jetton_transfer(slice bodyCs) inline_ref {
+    ;;     transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
+    ;;                  response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+    ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+    ;;                  = InternalMsgBody;
+
+    int op = bodyCs~load_uint(32);
+
+    if (op != 0x0f8a7ea5) {
+        ~strdump_safe("You pass not valid message, got diffrent OP code");
+        throw(99);
+    }
+
+    int query_id = bodyCs~load_uint(64);
+
+    int amount = bodyCs~load_coins();
+    slice dest = bodyCs~load_msg_addr();
+    slice response_dest = bodyCs~load_msg_addr();
+    cell custom_payload = begin_cell().end_cell();
+    int maybe_custom_payload = bodyCs~load_uint(1);
+
+    if (maybe_custom_payload == 1) {
+        custom_payload = bodyCs~load_ref();
+    } else {
+        custom_payload = begin_cell().end_cell();
+    }
+
+    int forward_ton_amount = bodyCs~load_coins();
+    cell forward_payload = begin_cell().end_cell();
+    if (bodyCs~load_uint(1) == 0) {
+        forward_payload = begin_cell().store_slice(bodyCs).end_cell();
+    } else {
+        forward_payload = bodyCs~load_ref();
+    }
+
+    return [query_id, amount, dest, response_dest, custom_payload, forward_ton_amount, forward_payload];
+}
+

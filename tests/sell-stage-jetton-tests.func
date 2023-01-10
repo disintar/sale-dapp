@@ -1,0 +1,221 @@
+;; Copyright (c) 2022-2023 Disintar LLP Licensed under the Business Source License 1.1
+
+#pragma version >=0.2.0;
+#include "utils/jetton.func";
+
+;; Try to buy with jetttons
+_ __test_jettons_buy() {
+    int marketplace_fee = 5;
+    int marketplace_feeD = 100;
+    int royalty = 5;
+    int royaltyD = 100;
+    int price = 100;
+
+    int market_fee_check = muldiv(price, marketplace_fee, marketplace_feeD);
+    int royalty_fee_check = muldiv((price - market_fee_check), royalty, royaltyD);
+
+    int ton_to_send = 1000000000;
+    int jetton_to_send = price + 10;
+
+    slice rand_royalty_address = random_0wc_address();
+    slice rand_owner_address = random_0wc_address();
+    slice rand_buyer_address = random_0wc_address();
+    slice rand_nft_address = random_0wc_address();
+    slice rand_jetton_address = random_0wc_address();
+    slice rand_jetton_master_address = random_0wc_address();
+
+
+    set_fake_data_ultimate(
+            1, ;; mode
+            rand_nft_address, ;; nft_address
+            rand_owner_address, ;; owner_address
+            addr_null(), ;; buyer
+            marketplace_fee, ;; marketplace_fee_numerator
+            marketplace_feeD, ;; marketplace_fee_denominator
+            royalty, ;; royalty_fee_numerator
+            royaltyD, ;; royalty_fee_denominator
+            rand_royalty_address, ;; royalty_address
+            0, ;; is_ton
+            price, ;; price
+            addr_null(), ;; limit_address
+            0, ;; limited_time
+            rand_jetton_address, ;; jetton_address
+            rand_jetton_master_address ;; master_jetton
+    );
+
+
+    builder message = begin_cell();
+    message = message.store_uint(0x7362d09c, 32); ;; transfer_notification#7362d09c
+    message = message.store_uint(0, 64); ;; query_id:uint64
+    message = message.store_coins(jetton_to_send); ;; amount:(VarUInteger 16)
+    message = message.store_slice(rand_buyer_address); ;; sender:MsgAddress
+    message = message.store_uint(0, 1); ;; forward_payload:(Either Cell ^Cell)
+
+
+    cell buy_nft_message = generate_internal_message_custom(
+            0, ;; bounce
+            ton_to_send, ;; ton_amount
+            0, ;; init_state
+            message, ;; payload
+            rand_jetton_address, ;; src
+            my_address(), ;; dest
+            10); ;; fwd_fee
+
+    [int, int, cell, slice] internal_message_stack = [
+            one_ton / 10, ;; my_balance
+            ton_to_send, ;; msg_value
+            buy_nft_message, ;; in_msg_full
+            message.end_cell().begin_parse()]; ;; in_msg_body
+
+    (int gas_used, _) = invoke_method(recv_internal, internal_message_stack);
+
+    tuple actions = parse_c5();
+    ~strdump_int("Got actions: ", actions.tuple_length());
+
+    ;; 1 - Market fee (jetton)
+    ;; 2 - Royalty (jetton)
+    ;; 3 - Money for seller (jetton)
+    ;; 4 - Change (jetton)
+    ;; 5 - Reserve money (ton)
+    ;; 6 - Send NFT (ton)
+    throw_unless(901, actions.tuple_length() == 6);
+
+    ;; First message send to marketplace
+    (int action_type, cell body, int mode) = actions.at(0).untriple();
+    throw_unless(906, action_type == 0);
+
+    ;; It's jetton sale, so message must go to jetton wallet
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(907, equal_slices(rand_jetton_address, parsed_msg.at(4)));
+
+    ;; Let's check content
+
+    ;;     transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
+    ;;                  response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+    ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+    ;;                  = InternalMsgBody;
+    tuple parsed_token_transfer = unsafe_tuple(parse_jetton_transfer(parsed_msg.at(8)));
+
+    int amount = parsed_token_transfer.at(1);
+    slice mcDest = parsed_token_transfer.at(2);
+    slice responceDest = parsed_token_transfer.at(3);
+
+    slice money = parsed_token_transfer.at(2);
+
+    throw_unless(908, equal_slices(marketplace, mcDest));
+    throw_unless(909, equal_slices(rand_buyer_address, responceDest));
+    throw_unless(910, market_fee_check == amount);
+    ~strdump_safe("Market fee checked!");
+
+    ;;
+    ;;
+    ;;
+    ;;
+
+    (int action_type, cell body, int mode) = actions.at(1).untriple();
+    throw_unless(911, action_type == 0);
+
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(912, equal_slices(rand_jetton_address, parsed_msg.at(4)));
+
+    ;; Let's check content
+
+    ;;     transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
+    ;;                  response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+    ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+    ;;                  = InternalMsgBody;
+    tuple parsed_token_transfer = unsafe_tuple(parse_jetton_transfer(parsed_msg.at(8)));
+
+    int amount = parsed_token_transfer.at(1);
+    slice mcDest = parsed_token_transfer.at(2);
+    slice responceDest = parsed_token_transfer.at(3);
+
+    slice money = parsed_token_transfer.at(2);
+
+    throw_unless(913, equal_slices(rand_royalty_address, mcDest));
+    throw_unless(914, equal_slices(rand_buyer_address, responceDest));
+    throw_unless(915, royalty_fee_check == amount);
+    ~strdump_safe("Jeton royalty checked!");
+
+
+    ;;
+    ;;
+    ;;
+    ;;
+
+    (int action_type, cell body, int mode) = actions.at(2).untriple();
+    throw_unless(916, action_type == 0);
+
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(917, equal_slices(rand_jetton_address, parsed_msg.at(4)));
+
+    ;; Let's check content
+
+    ;;     transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
+    ;;                  response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+    ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+    ;;                  = InternalMsgBody;
+    tuple parsed_token_transfer = unsafe_tuple(parse_jetton_transfer(parsed_msg.at(8)));
+
+    int amount = parsed_token_transfer.at(1);
+    slice mcDest = parsed_token_transfer.at(2);
+    slice responceDest = parsed_token_transfer.at(3);
+
+    slice money = parsed_token_transfer.at(2);
+
+    throw_unless(918, equal_slices(rand_owner_address, mcDest));
+    throw_unless(919, equal_slices(rand_buyer_address, responceDest));
+    throw_unless(920, (price - royalty_fee_check - market_fee_check) == amount);
+    ~strdump_safe("Seller jetton checked!");
+
+    ;;
+    ;;
+    ;;
+    ;;
+
+    (int action_type, cell body, int mode) = actions.at(3).untriple();
+    throw_unless(921, action_type == 0);
+
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(922, equal_slices(rand_jetton_address, parsed_msg.at(4)));
+
+    ;; Let's check content
+
+    ;;     transfer#0f8a7ea5 query_id:uint64 amount:(VarUInteger 16) destination:MsgAddress
+    ;;                  response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+    ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
+    ;;                  = InternalMsgBody;
+    tuple parsed_token_transfer = unsafe_tuple(parse_jetton_transfer(parsed_msg.at(8)));
+
+    int amount = parsed_token_transfer.at(1);
+    slice mcDest = parsed_token_transfer.at(2);
+    slice responceDest = parsed_token_transfer.at(3);
+
+    slice money = parsed_token_transfer.at(2);
+
+    throw_unless(923, equal_slices(rand_buyer_address, mcDest));
+    throw_unless(924, equal_slices(rand_buyer_address, responceDest));
+    throw_unless(925, (jetton_to_send - price) == amount);
+    ~strdump_safe("Change jetton checked!");
+
+    ;; NFT Transfer
+
+    ;; transfer#5fcc3d14 query_id:uint64 new_owner:MsgAddress response_destination:MsgAddress custom_payload:(Maybe ^Cell)
+    ;; forward_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)  = InternalMsgBody;
+    (int action_type, cell body, int mode) = actions.at(5).untriple();
+    throw_unless(926, action_type == 0);
+
+    tuple parsed_msg = unsafe_tuple(parse_internal_message(body));
+    throw_unless(927, equal_slices(rand_nft_address, parsed_msg.at(4)));
+
+    slice bodyCs = parsed_msg.at(8);
+    int op = bodyCs~load_uint(32);
+    throw_unless(928, op == 0x5fcc3d14);
+
+    bodyCs~skip_bits(64);
+    slice dest = bodyCs~load_msg_addr();
+    throw_unless(929, equal_slices(rand_buyer_address, dest));
+    ~strdump_safe("NFT ransfer checked!");
+
+    return gas_used;
+}

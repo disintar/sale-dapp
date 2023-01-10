@@ -1,0 +1,14 @@
+slice random_0wc_address() inline {
+    randomize(random() + 228);
+
+    var address = random();
+    slice random_wallet = begin_cell()
+            .store_uint(2, 2) ;; addr_std$10
+            .store_uint(0, 1) ;; anycast nothing
+            .store_int(0, 8) ;; workchain_id
+            .store_uint(address, 256)
+            .end_cell()
+            .begin_parse();
+
+    return random_wallet;
+}

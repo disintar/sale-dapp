@@ -1,4 +1,4 @@
-;; Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+;; Copyright (c) 2022-2023 Disintar LLP Licensed under the Business Source License 1.1
 
 () send_message(slice to_address,
         int amount,
@@ -74,7 +74,6 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
     ;;                  forward_ton_amount:(VarUInteger 16) forward_payload:(Either Cell ^Cell)
     ;;                  = InternalMsgBody;
 
-    ;; TODO: test this is actually will work
     builder transfer_message = begin_cell();
     transfer_message = store_coins(transfer_message, amount);
     transfer_message = store_slice(transfer_message, dest);
@@ -94,7 +93,7 @@ _ send_nft(slice nft_address, slice new_owner_address, int forward_amount) impur
     send_message(src, ;; to_address
             send_ton_amount, ;; forward_amount
             op::ft::transfer, ;; op code
-            0, ;; query id
+            228, ;; query id
             transfer_message, ;; payload
             1); ;; send mode
 }

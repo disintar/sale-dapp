@@ -1,0 +1,28 @@
+bool_false$0 = Bool;
+bool_true$1 = Bool;
+nanograms$_ amount:(VarUInteger 16) = Grams;
+
+addr_none$00 = MsgAddressExt;
+addr_extern$01 len:(## 9) external_address:(bits len)
+             = MsgAddressExt;
+anycast_info$_ depth:(#<= 30) { depth >= 1 }
+   rewrite_pfx:(bits depth) = Anycast;
+addr_std$10 anycast:(Maybe Anycast)
+   workchain_id:int8 address:bits256  = MsgAddressInt;
+addr_var$11 anycast:(Maybe Anycast) addr_len:(## 9)
+   workchain_id:int32 address:(bits addr_len) = MsgAddressInt;
+_ _:MsgAddressInt = MsgAddress;
+_ _:MsgAddressExt = MsgAddress;
+
+// seller stuff
+
+price_cell$_ is_ton:Bool price:Grams limited_address:MsgAddress end_time:uint32
+           sale_jetton_wallet:MsgAddress jetton_master: MsgAddress = PriceCell;
+
+seller_update_sale#0000000a priceCell:^PriceCell = InternalMsgBody;
+seller_cancel_sale#0000000b = InternalMsgBody;
+seller_send_nft#000000a0 = InternalMsgBody; // will try to send NFT from seller one more time
+admin_send_message#00000a00 message_0:Maybe ^Cell
+                            message_1:Maybe ^Cell
+                            message_2:Maybe ^Cell
+                            message_3:Maybe ^Cell = InternalMsgBody;

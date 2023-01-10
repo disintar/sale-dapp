@@ -1,4 +1,4 @@
-;; Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+;; Copyright (c) 2022-2023 Disintar LLP Licensed under the Business Source License 1.1
 
 ;; (0.06 TON) gas for computations of current smart contract in bad way
 const little_gas_amount = 60000000;

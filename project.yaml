@@ -1,8 +1,13 @@
-# Copyright (c) 2022 Disintar LLP Licensed under the Business Source License 1.1
+# Copyright (c) 2022-2023 Disintar LLP Licensed under the Business Source License 1.1
 
 nft_sale:
+  name: "NFT Sale contract"
+  dapp:
+    url: https://sale.dapp.dton.io/
   data: fift/data.fif
   func:
     - func/contract.func
   tests:
     - tests/tests.func
+  tlb:
+    - seller.tlb
