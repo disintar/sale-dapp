@@ -13,7 +13,6 @@ _ get_version() method_id {
     );
 }
 
-;; todo: add tests
 (slice, slice, slice, int, int, slice, int, int, slice, slice, int, slice) get_sale_data() method_id {
     (int mode,
             slice nft_address,
@@ -65,7 +64,6 @@ _ get_version() method_id {
     );
 }
 
-;; todo: add tests
 slice get_buyer() method_id {
     (int mode,
             slice nft_address,
@@ -77,7 +75,6 @@ slice get_buyer() method_id {
     return buyer;
 }
 
-;; todo: add tests
 int get_is_closed() method_id {
     (int mode,
             slice nft_address,
